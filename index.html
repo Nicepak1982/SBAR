@@ -530,7 +530,7 @@
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v1.2</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">...</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -1041,7 +1041,7 @@
     </div>
     <div class="field" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
       <label>Version Number</label>
-      <input type="text" id="setupVersion" placeholder="e.g. v1.1" style="max-width:160px;" />
+      <input type="text" id="setupVersion" placeholder="e.g. v1.3" style="max-width:160px;" />
     </div>
     <div class="field">
       <label>Changelog — one bullet per line</label>
@@ -1416,9 +1416,9 @@ function selectReportType(type) {
   const btn = document.getElementById('type-btn-' + keyMap[type]);
   if (btn) btn.classList.add('active');
 
-  // Update nav tab label
-  const tab = document.querySelector('.nav-tab.active');
-  if (tab) tab.textContent = typeConfig[type].navLabel;
+  // Update nav tab label — find the form tab specifically
+  const formTab = document.querySelector('.nav-tab[onclick*="form"]');
+  if (formTab) formTab.textContent = typeConfig[type].navLabel;
 
   // Update section subtitles and placeholders immediately
   const cfg = typeConfig[type];
@@ -2615,6 +2615,13 @@ function showToast(msg, type) {
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
+function initVersionBadge() {
+  // Show cached version immediately, Sheet will update if changed
+  const cached = localStorage.getItem('sbar_version');
+  const el = document.getElementById('nav-version');
+  if (el && cached) el.textContent = cached;
+}
+
 function hardResetForm() {
   // Force clear ALL inputs and textareas on the page — prevents browser session restore bleed
   document.querySelectorAll('input[type=text], input[type=password], textarea').forEach(el => {
@@ -2625,6 +2632,7 @@ function hardResetForm() {
 }
 
 window.onload = async () => {
+  initVersionBadge();
   hardResetForm();
   // Load config from Google Sheet — works for everyone automatically
   await loadConfigFromSheet();
