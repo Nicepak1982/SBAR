@@ -1,0 +1,2339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SBAR Operations Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #0d0d14;
+    --surface:   #16161f;
+    --surface2:  #1e1e2d;
+    --border:    #2a2a3d;
+    --accent:    #4f8ef7;
+    --accent2:   #7c5cbf;
+    --success:   #3ecf8e;
+    --warn:      #f7a84f;
+    --danger:    #f75f5f;
+    --text:      #e8e8f0;
+    --muted:     #7878a0;
+    --card:      #1a1a28;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+  }
+
+  /* ── TOP NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-right: 32px;
+    padding: 16px 0;
+  }
+  .nav-tab {
+    padding: 18px 20px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    user-select: none;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .nav-tab.locked::after { content: ' 🔒'; font-size: 11px; }
+
+  /* ── PAGES ── */
+  .page { display: none; max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  .page.active { display: block; }
+
+  /* ── HEADINGS ── */
+  h1 { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 3px; color: var(--text); line-height: 1; }
+  h2 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--text); }
+  h3 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .step-badge {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  /* ── FORM ── */
+  .field { margin-bottom: 18px; }
+  label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 8px; }
+  input[type=text], input[type=password], textarea, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 12px 14px;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+    resize: vertical;
+  }
+  input[type=text]:focus, input[type=password]:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,142,247,.12);
+  }
+  textarea { min-height: 100px; line-height: 1.6; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* ── AI COACHING BOX ── */
+  .ai-coaching {
+    background: linear-gradient(135deg, rgba(79,142,247,.08), rgba(124,92,191,.08));
+    border: 1px solid rgba(79,142,247,.25);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #a8c4ff;
+    line-height: 1.6;
+    min-height: 44px;
+    display: none;
+  }
+  .ai-coaching.visible { display: block; }
+  .ai-coaching .ai-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 6px; }
+  .ai-thinking { color: var(--muted); font-style: italic; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .2s;
+    letter-spacing: .3px;
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+  .btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-success { background: var(--success); color: #0d2918; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+  /* ── AI SUMMARY CARD ── */
+  .summary-card {
+    background: linear-gradient(135deg, rgba(62,207,142,.06), rgba(79,142,247,.06));
+    border: 1px solid rgba(62,207,142,.25);
+    border-radius: 12px;
+    padding: 28px;
+    margin-top: 24px;
+    display: none;
+  }
+  .summary-card.visible { display: block; }
+  .summary-card h2 { color: var(--success); font-size: 22px; margin-bottom: 16px; }
+  .summary-body { font-size: 14px; line-height: 1.8; color: var(--text); white-space: pre-wrap; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 32px; right: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    display: none;
+    z-index: 999;
+    max-width: 320px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  }
+  #toast.success { border-color: var(--success); color: var(--success); }
+  #toast.error { border-color: var(--danger); color: var(--danger); }
+
+  /* ── SETUP PAGE ── */
+  .setup-section { margin-bottom: 32px; }
+  .code-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+  .step-list { counter-reset: steps; list-style: none; }
+  .step-list li {
+    counter-increment: steps;
+    padding: 10px 0 10px 44px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .step-list li:last-child { border-bottom: none; }
+  .step-list li::before {
+    content: counter(steps);
+    position: absolute; left: 0; top: 10px;
+    width: 26px; height: 26px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    font-family: 'DM Mono', monospace;
+  }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .tag-blue { background: rgba(79,142,247,.15); color: var(--accent); }
+  .tag-green { background: rgba(62,207,142,.15); color: var(--success); }
+  .tag-purple { background: rgba(124,92,191,.15); color: #a882e8; }
+
+  /* ── DASHBOARD ── */
+  #dash-lock { text-align: center; padding: 60px 20px; }
+  #dash-lock h2 { margin-bottom: 12px; }
+  #dash-lock p { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
+  #dash-content { display: block; }
+  #setup-lock { text-align: center; padding: 60px 20px; }
+  #setup-lock h2 { margin-bottom: 12px; }
+  #setup-lock p { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
+
+  .dash-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 42px; color: var(--accent); line-height: 1; }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 4px; }
+
+  .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+  .filter-bar input, .filter-bar select { flex: 1; min-width: 160px; }
+
+  .sub-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+  .sub-card:hover { border-color: var(--accent); }
+  .sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+  .sub-name { font-weight: 600; font-size: 15px; }
+  .sub-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .sub-body { display: none; margin-top: 14px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .sub-body.open { display: block; }
+  .sbar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .sbar-item h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 4px; }
+  .sbar-item p { font-size: 13px; line-height: 1.6; }
+  .ai-sum-block { background: rgba(62,207,142,.06); border: 1px solid rgba(62,207,142,.2); border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.7; color: #a8dfc4; white-space: pre-wrap; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 28px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width .4s ease; }
+
+  /* ── SECTION SUMMARY CARD ── */
+  .section-summary-card {
+    background: linear-gradient(135deg, rgba(79,142,247,.06), rgba(124,92,191,.06));
+    border: 1px solid rgba(79,142,247,.2);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-top: 16px;
+    display: none;
+  }
+  .section-summary-card.visible { display: block; }
+  .section-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .section-summary-header h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin: 0;
+  }
+  .section-summary-body {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  .section-summary-thinking {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ── ANALYSIS MODAL ── */
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size:28px; letter-spacing:2px; margin-bottom:6px; }
+  .modal-subtitle { color:var(--muted); font-size:13px; margin-bottom:24px; line-height:1.5; }
+  .why-step {
+    display:flex; align-items:flex-start; gap:14px;
+    margin-bottom:16px;
+  }
+  .why-num {
+    width:32px; height:32px; border-radius:8px; flex-shrink:0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Bebas Neue',sans-serif; font-size:18px; color:#fff;
+  }
+  .why-step input { flex:1; }
+  .m1e-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .m1e-card { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:16px; }
+  .m1e-card h4 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin-bottom:10px; }
+  .m1e-card textarea { min-height:70px; font-size:13px; }
+  @media(max-width:600px){ .m1e-grid { grid-template-columns:1fr; } }
+
+  /* ── IDK / INVESTIGATION ── */
+  .idk-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: rgba(247,168,79,.06);
+    border: 1px solid rgba(247,168,79,.18);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .idk-toggle-row input[type=checkbox] {
+    width: 16px; height: 16px;
+    accent-color: var(--warn);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .idk-toggle-row label {
+    font-size: 13px;
+    color: #f7c97a;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+  .idk-plan-box {
+    display: none;
+    margin-top: 12px;
+    background: rgba(247,168,79,.04);
+    border: 1px solid rgba(247,168,79,.2);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .idk-plan-box.open { display: block; }
+  .idk-plan-box label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: #f7a84f;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .idk-bullet-list { margin-bottom: 10px; }
+  .idk-input-row { display: flex; gap: 8px; }
+  .idk-input-row input { flex: 1; }
+
+  /* ── EXAMPLE TOGGLE ── */
+  .example-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--accent);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    opacity: .8;
+    transition: opacity .15s;
+  }
+  .example-toggle:hover { opacity: 1; }
+  .example-box {
+    display: none;
+    margin-top: 10px;
+    background: rgba(255,255,255,.03);
+    border: 1px dashed rgba(255,255,255,.12);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-style: italic;
+  }
+  .example-box.open { display: block; }
+  .example-box .ex-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-style: normal;
+  }
+
+  /* ── BULLET BUILDER ── */
+  .bullet-builder {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px 8px 0 0;
+    padding: 10px 14px;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .bullet-builder:empty {
+    display: none;
+  }
+  .bullet-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  .bullet-item:last-child { border-bottom: none; }
+  .bullet-dot {
+    color: var(--accent);
+    font-size: 16px;
+    line-height: 1.4;
+    flex-shrink: 0;
+  }
+  .bullet-text { flex: 1; }
+  .bullet-remove, .bullet-edit {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+    line-height: 1.4;
+    flex-shrink: 0;
+    transition: color .15s;
+  }
+  .bullet-remove:hover { color: var(--danger); }
+  .bullet-edit:hover { color: var(--accent); }
+  .bullet-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .bullet-input-row input {
+    flex: 1;
+    border-radius: 0 0 8px 8px;
+    border-top: none;
+  }
+  .bullet-builder:empty + .bullet-input-row input {
+    border-radius: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .bullet-input-row .btn {
+    padding: 10px 16px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .bullet-empty-hint {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    padding: 4px 0;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .row2 { grid-template-columns: 1fr; }
+    .dash-stats { grid-template-columns: repeat(2, 1fr); }
+    .sbar-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">SBAR OPS</div>
+  <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
+  <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
+  <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
+</nav>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: FORM
+════════════════════════════════════════════════════ -->
+<div id="page-form" class="page active">
+  <div style="margin-bottom:32px;">
+    <h1>Monthly SBAR</h1>
+    <p class="subtitle">Take your time. Think through each section carefully — the AI will coach you along the way.</p>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <!-- Who are you -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-badge" style="background:var(--surface2); border:1px solid var(--border); color:var(--muted); font-family:'DM Sans',sans-serif; font-size:13px;">👤</div>
+      <div>
+        <h2>Who Are You?</h2>
+        <p class="subtitle">This identifies your submission in the dashboard.</p>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Your Name</label>
+        <input type="text" id="supName" placeholder="First Last" oninput="updateProgress(); checkIdentityUnlock()" />
+      </div>
+      <div class="field">
+        <label>Line / Department</label>
+        <input type="text" id="supLine" placeholder="e.g. Line 3, Packaging, QA" oninput="updateProgress(); checkIdentityUnlock()" />
+      </div>
+    </div>
+  </div>
+
+  <!-- S -->
+  <div class="section-summary-card" id="summary-card-situation">
+    <div class="section-summary-header">
+      <h3>✦ Situation — Professional Summary</h3>
+      <button class="btn btn-secondary" style="font-size:11px;padding:5px 12px;" onclick="generateSectionSummary('situation')">↻ Regenerate</button>
+    </div>
+    <div class="section-summary-body" id="summary-body-situation"><span class="section-summary-thinking">Generating summary...</span></div>
+  </div>
+
+  <!-- S -->
+  <div class="card" id="card-situation" style="display:none;">
+    <div class="card-header">
+      <div class="step-badge">S</div>
+      <div>
+        <h2>Situation</h2>
+        <p class="subtitle">What is actually happening right now? Be specific.</p>
+      </div>
+    </div>
+    <div class="field">
+      <label>Describe the situation — add one point at a time</label>
+      <div class="bullet-builder" id="bullets-situation"></div>
+      <div class="bullet-input-row">
+        <input type="text" id="bullet-input-situation" placeholder="e.g. RX500 line running at 55% OEE for 3 months..." onkeydown="if(event.key==='Enter'){event.preventDefault();addBullet('situation')}" />
+        <button class="btn btn-secondary" onclick="addBullet('situation')">+ Add</button>
+      </div>
+      <input type="hidden" id="situation" />
+
+      <!-- IDK Toggle -->
+      <div class="idk-toggle-row" onclick="toggleIdk('situation')">
+        <input type="checkbox" id="idk-check-situation" onclick="event.stopPropagation(); toggleIdk('situation')" />
+        <label for="idk-check-situation">I have exhausted what I know — investigation needed</label>
+      </div>
+
+      <!-- Investigation Plan -->
+      <div class="idk-plan-box" id="idk-plan-situation">
+        <label>What is your plan to find out? Add one action at a time.</label>
+        <div class="idk-bullet-list" id="idk-bullets-situation"></div>
+        <div class="idk-input-row">
+          <input type="text" id="idk-input-situation" placeholder="e.g. I will pull shift-level data by Friday to identify patterns..."
+            onkeydown="if(event.key==='Enter')'{event.preventDefault();addIdkBullet('situation')}" />
+          <button class="btn btn-secondary" onclick="addIdkBullet('situation')">+ Add</button>
+        </div>
+        <div class="ai-coaching" id="idk-coach-situation" style="margin-top:12px;">
+          <div class="ai-label">✦ AI Coach — Investigation Plan</div>
+          <div class="ai-text"></div>
+        </div>
+      </div>
+
+      <div class="ai-coaching" id="coach-situation">
+        <div class="ai-label">✦ AI Coach</div>
+        <div class="ai-text"></div>
+        <button class="example-toggle" id="example-toggle-situation" onclick="toggleExample('situation')" style="display:none;">
+          ▸ See an example
+        </button>
+        <div class="example-box" id="example-box-situation">
+          <div class="ex-label">Example — different scenario, same concept</div>
+          <div id="example-text-situation"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B -->
+  <div class="section-summary-card" id="summary-card-background">
+    <div class="section-summary-header">
+      <h3>✦ Background — Professional Summary</h3>
+      <button class="btn btn-secondary" style="font-size:11px;padding:5px 12px;" onclick="generateSectionSummary('background')">↻ Regenerate</button>
+    </div>
+    <div class="section-summary-body" id="summary-body-background"><span class="section-summary-thinking">Generating summary...</span></div>
+  </div>
+
+  <!-- B -->
+  <div class="card" id="card-background" style="display:none;">
+    <div class="card-header">
+      <div class="step-badge">B</div>
+      <div>
+        <h2>Background</h2>
+        <p class="subtitle">Why does this matter? What context does your manager need?</p>
+      </div>
+    </div>
+    <div class="field">
+      <label>Provide the background / context — add one point at a time</label>
+      <div class="bullet-builder" id="bullets-background"></div>
+      <div class="bullet-input-row">
+        <input type="text" id="bullet-input-background" placeholder="e.g. Line historically runs at 65% OEE with no issues..." onkeydown="if(event.key==='Enter'){event.preventDefault();addBullet('background')}" />
+        <button class="btn btn-secondary" onclick="addBullet('background')">+ Add</button>
+      </div>
+      <input type="hidden" id="background" />
+
+      <!-- IDK Toggle -->
+      <div class="idk-toggle-row" onclick="toggleIdk('background')">
+        <input type="checkbox" id="idk-check-background" onclick="event.stopPropagation(); toggleIdk('background')" />
+        <label for="idk-check-background">I have exhausted what I know — investigation needed</label>
+      </div>
+
+      <!-- Investigation Plan -->
+      <div class="idk-plan-box" id="idk-plan-background">
+        <label>What is your plan to find out? Add one action at a time.</label>
+        <div class="idk-bullet-list" id="idk-bullets-background"></div>
+        <div class="idk-input-row">
+          <input type="text" id="idk-input-background" placeholder="e.g. I will pull shift-level data by Friday to identify patterns..."
+            onkeydown="if(event.key==='Enter')'{event.preventDefault();addIdkBullet('background')}" />
+          <button class="btn btn-secondary" onclick="addIdkBullet('background')">+ Add</button>
+        </div>
+        <div class="ai-coaching" id="idk-coach-background" style="margin-top:12px;">
+          <div class="ai-label">✦ AI Coach — Investigation Plan</div>
+          <div class="ai-text"></div>
+        </div>
+      </div>
+
+      <div class="ai-coaching" id="coach-background">
+        <div class="ai-label">✦ AI Coach</div>
+        <div class="ai-text"></div>
+        <button class="example-toggle" id="example-toggle-background" onclick="toggleExample('background')" style="display:none;">
+          ▸ See an example
+        </button>
+        <div class="example-box" id="example-box-background">
+          <div class="ex-label">Example — different scenario, same concept</div>
+          <div id="example-text-background"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- A -->
+  <div class="section-summary-card" id="summary-card-assessment">
+    <div class="section-summary-header">
+      <h3>✦ Assessment — Professional Summary</h3>
+      <button class="btn btn-secondary" style="font-size:11px;padding:5px 12px;" onclick="generateSectionSummary('assessment')">↻ Regenerate</button>
+    </div>
+    <div class="section-summary-body" id="summary-body-assessment"><span class="section-summary-thinking">Generating summary...</span></div>
+  </div>
+
+  <!-- A -->
+  <div class="card" id="card-assessment" style="display:none;">
+    <div class="card-header">
+      <div class="step-badge">A</div>
+      <div>
+        <h2>Assessment</h2>
+        <p class="subtitle">What do YOU think is causing this? Own your analysis.</p>
+      </div>
+    </div>
+    <div class="field">
+      <label>Your root cause assessment — add one point at a time</label>
+      <div class="bullet-builder" id="bullets-assessment"></div>
+      <div class="bullet-input-row">
+        <input type="text" id="bullet-input-assessment" placeholder="e.g. Tension variance in new material rolls is driving web walk..." onkeydown="if(event.key==='Enter'){event.preventDefault();addBullet('assessment')}" />
+        <button class="btn btn-secondary" onclick="addBullet('assessment')">+ Add</button>
+      </div>
+      <input type="hidden" id="assessment" />
+
+      <!-- Analysis Tools -->
+      <div style="display:flex; gap:10px; margin-bottom:12px; margin-top:2px;">
+        <button class="btn btn-secondary" style="font-size:12px; padding:8px 14px;" onclick="toggleTool('5why')">5 Why Analysis</button>
+        <button class="btn btn-secondary" style="font-size:12px; padding:8px 14px;" onclick="toggleTool('5m1e')">5M 1E Analysis</button>
+      </div>
+
+      <!-- 5 WHY INLINE PANEL -->
+      <div id="tool-5why" style="display:none; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:20px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h2 style="font-size:20px;">5 Why Analysis</h2>
+          <button class="btn btn-secondary" style="font-size:11px; padding:5px 10px;" onclick="toggleTool('5why')">✕ Close</button>
+        </div>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">Start with the problem, then ask "Why?" five times to reach the root cause.</p>
+        <div class="field">
+          <label>Problem Statement</label>
+          <input type="text" id="why-problem" placeholder="e.g. Festoon rollers are failing early..." />
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="width:28px; height:28px; border-radius:6px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:16px; flex-shrink:0;">1</div>
+          <input type="text" id="why-1" placeholder="Why is this happening?" />
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="width:28px; height:28px; border-radius:6px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:16px; flex-shrink:0;">2</div>
+          <input type="text" id="why-2" placeholder="Why does that happen?" />
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="width:28px; height:28px; border-radius:6px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:16px; flex-shrink:0;">3</div>
+          <input type="text" id="why-3" placeholder="Why is that the case?" />
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="width:28px; height:28px; border-radius:6px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:16px; flex-shrink:0;">4</div>
+          <input type="text" id="why-4" placeholder="What causes that?" />
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <div style="width:28px; height:28px; border-radius:6px; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:16px; flex-shrink:0;">5</div>
+          <input type="text" id="why-5" placeholder="Root cause — why is that?" />
+        </div>
+        <button class="btn btn-primary" onclick="applyWhyAnalysis()">Apply to Assessment</button>
+      </div>
+
+      <!-- 5M1E INLINE PANEL -->
+      <div id="tool-5m1e" style="display:none; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:20px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h2 style="font-size:20px;">5M 1E Analysis</h2>
+          <button class="btn btn-secondary" style="font-size:11px; padding:5px 10px;" onclick="toggleTool('5m1e')">✕ Close</button>
+        </div>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">Fill in any categories that apply. Leave blank if not relevant.</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+          <div>
+            <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--accent); display:block; margin-bottom:6px;">Man (People)</label>
+            <textarea id="m1e-man" rows="3" style="width:100%; font-size:13px;" placeholder="Training gaps, new hires, operator error..."></textarea>
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--accent); display:block; margin-bottom:6px;">Machine (Equipment)</label>
+            <textarea id="m1e-machine" rows="3" style="width:100%; font-size:13px;" placeholder="Wear, calibration, settings, maintenance..."></textarea>
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--accent); display:block; margin-bottom:6px;">Material</label>
+            <textarea id="m1e-material" rows="3" style="width:100%; font-size:13px;" placeholder="Supplier change, quality variance..."></textarea>
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--accent); display:block; margin-bottom:6px;">Method (Process)</label>
+            <textarea id="m1e-method" rows="3" style="width:100%; font-size:13px;" placeholder="SOP changes, process variation..."></textarea>
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--accent); display:block; margin-bottom:6px;">Measurement</label>
+            <textarea id="m1e-measurement" rows="3" style="width:100%; font-size:13px;" placeholder="Inspection gaps, missing data..."></textarea>
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--accent); display:block; margin-bottom:6px;">Environment</label>
+            <textarea id="m1e-environment" rows="3" style="width:100%; font-size:13px;" placeholder="Temperature, shift patterns..."></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="applyM1eAnalysis()">Apply to Assessment</button>
+      </div>
+
+      <!-- IDK Toggle -->
+      <div class="idk-toggle-row" onclick="toggleIdk('assessment')">
+        <input type="checkbox" id="idk-check-assessment" onclick="event.stopPropagation(); toggleIdk('assessment')" />
+        <label for="idk-check-assessment">I have exhausted what I know — investigation needed</label>
+      </div>
+
+      <!-- Investigation Plan -->
+      <div class="idk-plan-box" id="idk-plan-assessment">
+        <label>What is your plan to find out? Add one action at a time.</label>
+        <div class="idk-bullet-list" id="idk-bullets-assessment"></div>
+        <div class="idk-input-row">
+          <input type="text" id="idk-input-assessment" placeholder="e.g. I will pull shift-level data by Friday to identify patterns..."
+            onkeydown="if(event.key==='Enter')'{event.preventDefault();addIdkBullet('assessment')}" />
+          <button class="btn btn-secondary" onclick="addIdkBullet('assessment')">+ Add</button>
+        </div>
+        <div class="ai-coaching" id="idk-coach-assessment" style="margin-top:12px;">
+          <div class="ai-label">✦ AI Coach — Investigation Plan</div>
+          <div class="ai-text"></div>
+        </div>
+      </div>
+
+      <div class="ai-coaching" id="coach-assessment">
+        <div class="ai-label">✦ AI Coach</div>
+        <div class="ai-text"></div>
+        <button class="example-toggle" id="example-toggle-assessment" onclick="toggleExample('assessment')" style="display:none;">
+          ▸ See an example
+        </button>
+        <div class="example-box" id="example-box-assessment">
+          <div class="ex-label">Example — different scenario, same concept</div>
+          <div id="example-text-assessment"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R -->
+  <div class="section-summary-card" id="summary-card-recommendation">
+    <div class="section-summary-header">
+      <h3>✦ Recommendation — Professional Summary</h3>
+      <button class="btn btn-secondary" style="font-size:11px;padding:5px 12px;" onclick="generateSectionSummary('recommendation')">↻ Regenerate</button>
+    </div>
+    <div class="section-summary-body" id="summary-body-recommendation"><span class="section-summary-thinking">Generating summary...</span></div>
+  </div>
+
+  <!-- R -->
+  <div class="card" id="card-recommendation" style="display:none;">
+    <div class="card-header">
+      <div class="step-badge">R</div>
+      <div>
+        <h2>Recommendation</h2>
+        <p class="subtitle">What is your plan? What are you going to do about it?</p>
+      </div>
+    </div>
+    <div class="field">
+      <label>Your action plan — add one action at a time</label>
+      <div class="bullet-builder" id="bullets-recommendation"></div>
+      <div class="bullet-input-row">
+        <input type="text" id="bullet-input-recommendation" placeholder="e.g. Request tension variance report from supplier by Friday (owner: me)..." onkeydown="if(event.key==='Enter'){event.preventDefault();addBullet('recommendation')}" />
+        <button class="btn btn-secondary" onclick="addBullet('recommendation')">+ Add</button>
+      </div>
+      <input type="hidden" id="recommendation" />
+      <div class="ai-coaching" id="coach-recommendation">
+        <div class="ai-label">✦ AI Coach</div>
+        <div class="ai-text"></div>
+        <button class="example-toggle" id="example-toggle-recommendation" onclick="toggleExample('recommendation')" style="display:none;">
+          ▸ See an example
+        </button>
+        <div class="example-box" id="example-box-recommendation">
+          <div class="ex-label">Example — different scenario, same concept</div>
+          <div id="example-text-recommendation"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <!-- Full SBAR Summary Preview -->
+  <div id="full-summary-preview" style="display:none; background:linear-gradient(135deg,rgba(79,142,247,.06),rgba(124,92,191,.06)); border:1px solid rgba(79,142,247,.25); border-radius:12px; padding:28px; margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+      <h2 style="font-size:22px; color:var(--accent);">✦ Full SBAR Summary</h2>
+      <button class="btn btn-secondary" style="font-size:11px; padding:5px 12px;" onclick="regenerateFullPreview()">↻ Regenerate</button>
+    </div>
+    <p style="font-size:12px; color:var(--muted); margin-bottom:16px;">This is your formalized report. Copy and paste it wherever needed.</p>
+    <div id="full-summary-preview-body" style="font-size:14px; line-height:1.9; color:var(--text); white-space:pre-wrap; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:20px;">
+      <span style="color:var(--muted); font-style:italic;">Generating your full SBAR summary...</span>
+    </div>
+    <button class="btn btn-secondary" style="margin-top:14px; font-size:13px;" onclick="copyFullSummary()">⎘ Copy to Clipboard</button>
+  </div>
+
+  <div id="submit-row" style="display:none; gap:12px; align-items:center; flex-wrap:wrap;">
+    <button class="btn btn-primary" id="submitBtn" onclick="submitForm()">
+      ✦ Submit Monthly SBAR
+    </button>
+    <button class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
+    <span id="submitStatus" style="font-size:13px; color:var(--muted);"></span>
+  </div>
+
+  <!-- AI Summary -->
+  <div class="summary-card" id="summaryCard">
+    <h2>✦ AI Post-Submit Summary</h2>
+    <div class="summary-body" id="summaryBody"></div>
+    <div style="margin-top:20px;">
+      <button class="btn btn-secondary" onclick="startNewForm()">Submit Another</button>
+    </div>
+  </div>
+  </div><!-- end setup-content -->
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: DASHBOARD
+════════════════════════════════════════════════════ -->
+<div id="page-dashboard" class="page">
+  <div id="dash-content">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
+      <div>
+        <h1>Dashboard</h1>
+        <p class="subtitle" id="dashSubtitle">Loading submissions...</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-secondary" onclick="loadDashboard()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="dash-stats">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">Total Submissions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-supervisors">0</div>
+        <div class="stat-label">Supervisors</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-month">0</div>
+        <div class="stat-label">This Month</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <input type="text" id="filterSearch" placeholder="Search by name, line, or keyword..." oninput="renderSubmissions()" />
+      <select id="filterName" onchange="renderSubmissions()"><option value="">All Supervisors</option></select>
+      <select id="filterLine" onchange="renderSubmissions()"><option value="">All Lines</option></select>
+      <select id="filterMonth" onchange="renderSubmissions()"><option value="">All Months</option></select>
+    </div>
+
+    <!-- Submissions list -->
+    <div id="submissions-list"></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE: SETUP
+════════════════════════════════════════════════════ -->
+<div id="page-setup" class="page">
+  <!-- Setup Lock Screen -->
+  <div id="setup-lock">
+    <h2>Setup</h2>
+    <p>Enter your dashboard password to access setup.</p>
+    <div style="max-width:280px; margin:0 auto;">
+      <input type="password" id="setupLockPass" placeholder="Password" onkeydown="if(event.key==='Enter') unlockSetup()" style="margin-bottom:12px;" />
+      <button class="btn btn-primary" style="width:100%;" onclick="unlockSetup()">Unlock Setup</button>
+    </div>
+  </div>
+
+  <!-- Setup Content -->
+  <div id="setup-content" style="display:none;">
+  <div style="margin-bottom:32px;">
+    <h1>Setup</h1>
+    <p class="subtitle">One-time configuration. Do this before sharing the form with your supervisors.</p>
+  </div>
+
+  <!-- Step 1: Apps Script -->
+  <div class="card setup-section">
+    <h2 style="margin-bottom:16px;">Step 1 — Deploy the Apps Script</h2>
+    <ol class="step-list">
+      <li>Go to <strong>script.google.com</strong> and click <span class="tag tag-blue">New Project</span></li>
+      <li>Open the <code>apps_script.gs</code> file provided and paste all its contents, replacing any default code</li>
+      <li>Click <span class="tag tag-blue">Deploy</span> → <span class="tag tag-blue">New Deployment</span></li>
+      <li>Set Type to <strong>Web App</strong>, Execute as <strong>Me</strong>, Who has access <strong>Anyone</strong></li>
+      <li>Click <strong>Deploy</strong>, authorize permissions when prompted</li>
+      <li>Copy the <strong>Web App URL</strong> — you'll paste it below</li>
+    </ol>
+    <div style="margin-top:16px; background:rgba(247,168,79,.06); border:1px solid rgba(247,168,79,.2); border-radius:8px; padding:14px 16px; font-size:13px; color:#f7c97a;">
+      💡 The script will auto-create a sheet named <strong>SBAR_Submissions</strong> with all headers on the first submission. You don't need to set anything up in Sheets.
+    </div>
+  </div>
+
+  <!-- Step 2: Config -->
+  <div class="card setup-section">
+    <h2 style="margin-bottom:16px;">Step 2 — Enter Your Credentials</h2>
+    <div class="field">
+      <label>Google Apps Script Web App URL</label>
+      <input type="text" id="setupScriptUrl" placeholder="https://script.google.com/macros/s/..." />
+    </div>
+    <div class="field">
+      <label>Gemini API Key</label>
+      <div style="display:flex; gap:10px;">
+        <input type="text" id="setupGeminiKey" placeholder="AIza..." style="flex:1;" oninput="onKeyInput()" />
+        <button class="btn btn-secondary" style="white-space:nowrap; flex-shrink:0;" onclick="fetchGeminiModels()">&#8635; Load Models</button>
+      </div>
+    </div>
+    <div class="field">
+      <label style="display:flex; align-items:center; justify-content:space-between;">
+        <span>Gemini Model</span>
+        <span id="model-status" style="font-size:11px; color:var(--muted); font-weight:400; text-transform:none; letter-spacing:0;"></span>
+      </label>
+      <select id="setupModel">
+        <option value="">&#8212; Enter API key above to load models &#8212;</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Dashboard Password</label>
+      <input type="password" id="setupPassword" placeholder="Choose a password for the dashboard" />
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;">
+      <button class="btn btn-primary" onclick="saveSetup()">Save Configuration</button>
+      <button class="btn btn-secondary" onclick="testConnection()">Test Connection</button>
+    </div>
+    <div id="setup-status" style="margin-top:12px; font-size:13px;"></div>
+  </div>
+
+  <!-- Step 3: Share -->
+  <div class="card">
+    <h2 style="margin-bottom:12px;">Step 3 — Share the File</h2>
+    <p style="font-size:14px; color:var(--text); line-height:1.7;">
+      Share <strong>sbar_form.html</strong> directly with your supervisors via email, shared drive, or any file sharing method. 
+      They open it in any browser — no installation needed. Your configuration is saved in their browser locally so they 
+      don't need to touch the Setup tab.
+    </p>
+    <div style="margin-top:14px; background:rgba(62,207,142,.06); border:1px solid rgba(62,207,142,.2); border-radius:8px; padding:14px 16px; font-size:13px; color:#a8dfc4;">
+      ✓ Supervisors only see the <strong>Monthly Report</strong> tab<br/>
+      ✓ Dashboard is password protected<br/>
+      ✓ All submissions go to your Google Sheet automatically
+    </div>
+  </div>
+</div>
+
+
+
+
+<script>
+// ══════════════════════════════════════════
+//  CONFIG — loaded from localStorage
+// ══════════════════════════════════════════
+const GEMINI_KEY_DEFAULT = "AIzaSyAFInXABh1-A2DukHxZVfyG2S4URIBII7Y";
+
+function getCfg() {
+  return {
+    scriptUrl:   localStorage.getItem('sbar_script_url') || '',
+    geminiKey:   localStorage.getItem('sbar_gemini_key') || GEMINI_KEY_DEFAULT,
+    geminiModel: localStorage.getItem('sbar_gemini_model') || 'gemini-1.5-flash',
+    dashPass:    localStorage.getItem('sbar_dash_pass') || 'admin'
+  };
+}
+
+// ══════════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'setup') {
+    // Reset setup lock each time tab is opened
+    document.getElementById('setup-lock').style.display = 'block';
+    document.getElementById('setup-content').style.display = 'none';
+    document.getElementById('setupLockPass').value = '';
+  }
+}
+
+// ══════════════════════════════════════════
+//  SETUP
+// ══════════════════════════════════════════
+function populateSetupFields() {
+  const cfg = getCfg();
+  document.getElementById('setupScriptUrl').value = cfg.scriptUrl;
+  document.getElementById('setupGeminiKey').value = cfg.geminiKey;
+  document.getElementById('setupPassword').value  = cfg.dashPass;
+  // Auto-load models if key is present
+  if (cfg.geminiKey) fetchGeminiModels(cfg.geminiModel);
+}
+
+// Debounce key input to auto-fetch models after typing stops
+let keyInputTimer;
+function onKeyInput() {
+  clearTimeout(keyInputTimer);
+  keyInputTimer = setTimeout(() => fetchGeminiModels(), 900);
+}
+
+async function fetchGeminiModels(preselectModel) {
+  const key = document.getElementById('setupGeminiKey').value.trim();
+  if (!key) {
+    setModelStatus('Enter an API key first.', 'error'); return;
+  }
+  setModelStatus('Loading available models...', 'info');
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    const d = await r.json();
+    if (d.error) {
+      setModelStatus('API key error: ' + d.error.message, 'error');
+      return;
+    }
+    // Filter to only models that support generateContent
+    const models = (d.models || [])
+      .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+      .map(m => ({ id: m.name.replace('models/', ''), display: m.displayName || m.name.replace('models/', '') }))
+      .sort((a, b) => {
+        // Prefer flash/pro gemini models at top
+        const rank = x => x.includes('1.5-flash') ? 0 : x.includes('2.0-flash') ? 1 : x.includes('1.5-pro') ? 2 : x.includes('flash') ? 3 : x.includes('pro') ? 4 : 5;
+        return rank(a.id) - rank(b.id);
+      });
+
+    if (!models.length) {
+      setModelStatus('No compatible models found for this key.', 'error'); return;
+    }
+
+    const sel = document.getElementById('setupModel');
+    sel.innerHTML = models.map(m => `<option value="${m.id}">${m.display} (${m.id})</option>`).join('');
+
+    // Restore previously saved model or saved default
+    const toSelect = preselectModel || getCfg().geminiModel;
+    if (toSelect) {
+      const match = models.find(m => m.id === toSelect);
+      if (match) sel.value = match.id;
+    }
+
+    setModelStatus(`✓ ${models.length} model${models.length !== 1 ? 's' : ''} loaded`, 'success');
+  } catch(e) {
+    setModelStatus('Failed to load models. Check your API key.', 'error');
+  }
+}
+
+function setModelStatus(msg, type) {
+  const el = document.getElementById('model-status');
+  const colors = { success: 'var(--success)', error: 'var(--danger)', warn: 'var(--warn)', info: 'var(--muted)' };
+  el.style.color = colors[type] || 'var(--muted)';
+  el.textContent = msg;
+}
+
+function saveSetup() {
+  const url   = document.getElementById('setupScriptUrl').value.trim();
+  const key   = document.getElementById('setupGeminiKey').value.trim();
+  const pass  = document.getElementById('setupPassword').value.trim();
+  const model = document.getElementById('setupModel').value.trim();
+  if (!url || !key || !pass) {
+    setSetupStatus('Please fill in all fields.', 'error'); return;
+  }
+  localStorage.setItem('sbar_script_url', url);
+  localStorage.setItem('sbar_gemini_key', key);
+  localStorage.setItem('sbar_dash_pass', pass);
+  if (model) localStorage.setItem('sbar_gemini_model', model);
+  setSetupStatus(`✓ Configuration saved. Using model: ${model || getCfg().geminiModel}`, 'success');
+}
+
+async function testConnection() {
+  const cfg = getCfg();
+  if (!cfg.scriptUrl) { setSetupStatus('Enter your Apps Script URL first.', 'error'); return; }
+  setSetupStatus('Testing connection...', 'info');
+  try {
+    const r = await fetch(cfg.scriptUrl + '?action=health');
+    const d = await r.json();
+    if (d.success) setSetupStatus('✓ Connection successful! Apps Script is running.', 'success');
+    else setSetupStatus('Connected but got an unexpected response.', 'warn');
+  } catch(e) {
+    setSetupStatus('Connection failed. Check your Apps Script URL and make sure it\'s deployed as a web app set to "Anyone".', 'error');
+  }
+}
+
+function setSetupStatus(msg, type) {
+  const el = document.getElementById('setup-status');
+  const colors = { success: 'var(--success)', error: 'var(--danger)', warn: 'var(--warn)', info: 'var(--muted)' };
+  el.style.color = colors[type] || 'var(--muted)';
+  el.textContent = msg;
+}
+
+// ══════════════════════════════════════════
+//  BULLET BUILDER
+// ══════════════════════════════════════════
+const bulletData = { situation: [], background: [], assessment: [], recommendation: [] };
+
+function addBullet(fieldId) {
+  const input = document.getElementById('bullet-input-' + fieldId);
+  const text = input.value.trim();
+  if (!text) return;
+
+  bulletData[fieldId].push(text);
+  input.value = '';
+  renderBullets(fieldId);
+  syncHidden(fieldId);
+  onFieldInput(fieldId);
+  input.focus();
+}
+
+function removeBullet(fieldId, index) {
+  bulletData[fieldId].splice(index, 1);
+  renderBullets(fieldId);
+  syncHidden(fieldId);
+  onFieldInput(fieldId);
+}
+
+function renderBullets(fieldId) {
+  const container = document.getElementById('bullets-' + fieldId);
+  const bullets = bulletData[fieldId];
+
+  if (!bullets.length) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = bullets.map((text, i) => `
+    <div class="bullet-item" id="bullet-row-${fieldId}-${i}">
+      <span class="bullet-dot">•</span>
+      <span class="bullet-text" id="bullet-text-${fieldId}-${i}">${escapeHtml(text)}</span>
+      <button class="bullet-edit" onclick="startEditBullet('${fieldId}', ${i})" title="Edit">✎</button>
+      <button class="bullet-remove" onclick="removeBullet('${fieldId}', ${i})" title="Remove">✕</button>
+    </div>
+  `).join('');
+}
+
+function startEditBullet(fieldId, index) {
+  const textEl = document.getElementById('bullet-text-' + fieldId + '-' + index);
+  const row    = document.getElementById('bullet-row-' + fieldId + '-' + index);
+  const current = bulletData[fieldId][index];
+
+  // Replace the row content with an inline edit input
+  row.innerHTML = `
+    <span class="bullet-dot">•</span>
+    <input type="text"
+      id="bullet-edit-input-${fieldId}-${index}"
+      value="${escapeHtml(current)}"
+      style="flex:1; padding:4px 8px; font-size:14px; border-radius:6px; border:1px solid var(--accent); background:var(--surface2); color:var(--text); outline:none;"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();saveEditBullet('${fieldId}',${index})} if(event.key==='Escape'){renderBullets('${fieldId}')}"
+    />
+    <button class="bullet-edit" onclick="saveEditBullet('${fieldId}', ${index})" title="Save">✓</button>
+    <button class="bullet-remove" onclick="renderBullets('${fieldId}')" title="Cancel">✕</button>
+  `;
+  document.getElementById('bullet-edit-input-' + fieldId + '-' + index).focus();
+}
+
+function saveEditBullet(fieldId, index) {
+  const input = document.getElementById('bullet-edit-input-' + fieldId + '-' + index);
+  const newText = input ? input.value.trim() : '';
+  if (!newText) return;
+  bulletData[fieldId][index] = newText;
+  renderBullets(fieldId);
+  syncHidden(fieldId);
+  onFieldInput(fieldId);
+}
+
+function syncHidden(fieldId) {
+  // Combine bullets into single formatted string for AI scoring and submission
+  const combined = bulletData[fieldId].map(b => '\u2022 ' + b).join('\n');
+  document.getElementById(fieldId).value = combined;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getBulletText(fieldId) {
+  return bulletData[fieldId].map(b => '\u2022 ' + b).join('\n');
+}
+
+// ══════════════════════════════════════════
+//  SECTION UNLOCK
+// ══════════════════════════════════════════
+function checkIdentityUnlock() {
+  const name = document.getElementById('supName').value.trim();
+  const line = document.getElementById('supLine').value.trim();
+  const situCard = document.getElementById('card-situation');
+  if (name.length > 1 && line.length > 1) {
+    situCard.style.display = 'block';
+  } else {
+    // Re-hide situation and everything below if name/line cleared
+    ['situation','background','assessment','recommendation'].forEach(id => {
+      document.getElementById('card-' + id).style.display = 'none';
+    });
+    document.getElementById('submit-row').style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════════════
+//  PROGRESS
+// ══════════════════════════════════════════
+function updateProgress() {
+  const nameOk = document.getElementById('supName').value.trim().length > 1;
+  const lineOk = document.getElementById('supLine').value.trim().length > 1;
+  const sbars  = ['situation','background','assessment','recommendation'].filter(id => bulletData[id].length > 0).length;
+  const filled = (nameOk ? 1 : 0) + (lineOk ? 1 : 0) + sbars;
+  const pct = Math.round((filled / 6) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// ══════════════════════════════════════════
+//  AI COACHING (real-time, debounced)
+// ══════════════════════════════════════════
+const coachTimers = {};
+const fieldLabels = {
+  situation:      { label: 'Situation',      hint: 'Be specific: What is happening, on which line/area, and for how long?' },
+  background:     { label: 'Background',     hint: 'What context does your manager need? What changed recently? Why does this matter?' },
+  assessment:     { label: 'Assessment',     hint: 'What is YOUR analysis of the root cause? Have you ruled out other causes?' },
+  recommendation: { label: 'Recommendation', hint: 'What specific actions will you take, by when?' }
+};
+
+function onFieldInput(fieldId) {
+  updateProgress();
+  clearTimeout(coachTimers[fieldId]);
+  const val = getBulletText(fieldId);
+  if (val.length < 20) {
+    hideCoach(fieldId); return;
+  }
+  coachTimers[fieldId] = setTimeout(() => fetchCoaching(fieldId, val), 1400);
+}
+
+function showCoachThinking(fieldId) {
+  const box = document.getElementById('coach-' + fieldId);
+  box.classList.add('visible');
+  box.querySelector('.ai-text').innerHTML = '<span class="ai-thinking">Analyzing your response...</span>';
+}
+function hideCoach(fieldId) {
+  document.getElementById('coach-' + fieldId).classList.remove('visible');
+}
+
+// ── CLIENT-SIDE ELEMENT SCORER ───────────────────────────────────────────
+function scoreSection(fieldId, value) {
+  const v = value.toLowerCase();
+  const has = (...terms) => terms.some(t => v.includes(t.toLowerCase()));
+  const hasNumber = (pattern) => pattern.test(value);
+
+  // ── PASS 1: Element presence checks ─────────────────────────────────────
+  const checks = {
+    situation: [
+      has('rx500','rx 500','line 1','line 2','line 3','line 4','line 5','line a','line b','line c') ||
+        (has('line') && hasNumber(/line\s*\d/i)) || has('packaging line','assembly line','press line','extruder'),
+      hasNumber(/\d+\s*%\s*(oee|efficiency)|(oee|efficiency)\s*(of\s*)?\d+\s*%/i),
+      hasNumber(/target\s*(is|of|at|was)?\s*\d+\s*%|\d+\s*%\s*(target|goal)/i),
+      hasNumber(/\d+\s*(day|week|month|quarter|year)s?/i) || has('since january','since february','since march','since april','since may','since june','since july','since august','since september','since october','since november','since december'),
+      has('availability','web walk','film walk','broken hand','downtime') || (has('performance') && has('oee')),
+      hasNumber(/\$[\d,]+|\d+\s*(unit|piece|part)s?\s*(per|a|\/)\s*(day|shift|week)|\d+\s*(lost|missing|short)/)
+    ],
+    background: [
+      hasNumber(/\d+\s*%\s*(oee|efficiency|target|historically|normally|typically|baseline)/i) ||
+        has('historically ran','normally runs','typically runs','used to run','prior to this','baseline of','has been running'),
+      has('since january','since february','since march','since april','since may','since june','started in','began in','started when','began when') ||
+        hasNumber(/\d+\s*(weeks?|months?)\s*ago/i),
+      has('supplier change','new supplier','new operator','new material','new equipment','new process','material change','operator change','equipment change','process change','changeover'),
+      has('overtime','lost units','lost output','$','per day','per week','customer','shipment','behind schedule','capacity'),
+      has('tried','ruled out','investigated','checked','confirmed','verified','tested','pm is current','maintenance is current','no change to','unchanged')
+    ],
+    assessment: [
+      // 1. Hypothesis — broad conversational detection
+      (has('believe','think','hypothesis','suspect','may be','might be','likely','probably','appears to') && has('cause','because','due to','driven by','contributing','result of','related to','failing','issue','problem')) ||
+        has('root cause is','caused by','driven by','due to','resulting in','leads to','not being performed','being performed incorrectly'),
+      // 2. Evidence — conversational AND formal
+      has('data shows','data indicate','we observed','we noticed','we measured','we recorded','we tracked','evidence','operators reported','logs show','numbers show') ||
+        has('now they are','used to take','has changed','went from','taking longer','completing in','running at','dropped to','increased to','decreased','went up','went down','hours now','minutes now','was taking','now taking','used to be','now being','being completed in','hours to'),
+      // 3. Alternative or ruling out — broad
+      has('ruled out','also considered','another possibility','alternative','however','although','not the cause','eliminated','no other','other causes','may also','could also','but that'),
+      // 4. Contributing factors — broad
+      has('contributing','also contributing','secondary','combination','additionally','also playing','compounded','as well','another factor','may also be','could also be','may also contribute'),
+      // 5. Knowledge gap — broad
+      has('unknown','unclear','do not have','no data','not collected','not yet confirmed','still investigating','not yet identified','other causes are','causes are unknown','that is unknown','but that is unknown','not known','is unknown')
+    ],
+    recommendation: [
+      hasNumber(/1\)|2\)|step 1|step 2|\(1\)|\(2\)/i) ||
+        (v.split(/i will|we will|plan to|going to/).length - 1 >= 2),
+      has('i will','assigned to','owner:','responsible:','team lead','supervisor','manager will','engineer will') &&
+        !has('i will monitor','i will watch','i will keep'),
+      hasNumber(/by\s+(monday|tuesday|wednesday|thursday|friday|january|february|march|april|may|june|july|august|september|october|november|december|\d+\/\d+)/i) ||
+        hasNumber(/by\s+(end of|close of)\s+(this|next)?\s*(week|month|day)/i) ||
+        hasNumber(/within\s+\d+\s*(day|week|business day)s?/i),
+      has('root cause','supplier','material','operator training','standard work','process change','equipment','maintenance','rca','investigation'),
+      has('follow up','follow-up','verify','confirm results','check back','review results','report back','measure impact','track progress','validate')
+    ]
+  };
+
+  const elements = checks[fieldId] || [];
+  const count = elements.filter(Boolean).length;
+  const total = elements.length;
+
+  // ── PASS 2: Depth/specificity checks (only when all elements present) ──────
+  const depthChecks = {
+    situation: [
+      // Gap is quantified (e.g. "10 points below", "10% gap")
+      hasNumber(/\d+\s*(point|%)\s*(below|above|gap|short|under|off)/i),
+      // Driver has frequency or rate data (e.g. "4 occurrences per shift", "down 3%")
+      hasNumber(/\d+\s*(occurrence|event|time|instance)s?\s*per\s*(shift|day|week)/i) ||
+        hasNumber(/down\s*\d+\s*%|up\s*\d+\s*%|\d+\s*%\s*(decline|drop|increase|improvement)/i),
+      // Specific timeframe with named month OR "past N months/weeks"
+      has('since january','since february','since march','since april','since may','since june','since july','since august','since september','since october','since november','since december') ||
+        hasNumber(/over\s+(the\s+)?(last|past)\s+\d+|past\s+\d+\s*(day|week|month)/i),
+      // Both units lost AND cost quantified
+      hasNumber(/\d[\d,]*\s*(lost\s+)?(unit|piece|part)s?\s*(per|a|\/)\s*(day|shift)/i) &&
+        hasNumber(/\$[\d,]+/),
+      // Trend direction explicitly stated
+      has('declining','increasing','falling','rising','worsening','trending downward','trending up','down by','dropped','improving','steadily')
+    ],
+    background: [
+      // Baseline has a specific number
+      hasNumber(/\d+\s*%\s*(oee|efficiency|historically|normally|typically|baseline)/i) ||
+        hasNumber(/(historically|normally|typically|used to|prior)\s*(ran?|run|operated?|performed?)\s*at\s*\d+/i),
+      // Start time names a specific month or "N weeks/months ago"
+      has('since january','since february','since march','since april','since may','since june','since july','since august','since september','since october','since november','since december') ||
+        hasNumber(/\d+\s*(weeks?|months?)\s*ago/i),
+      // Change is specific and named
+      has('supplier change','new supplier','material change','new material','operator change','new operator','equipment change','process change','changeover'),
+      // Consequence has a number
+      hasNumber(/\$[\d,]+|\d[\d,]*\s*(unit|piece|part)s?\s*(per|a|\/)\s*(day|shift)/i),
+      // Something specific ruled out or confirmed
+      has('ruled out','confirmed','verified','tested and','pm is current','maintenance is current','no change to','has not changed')
+    ],
+    assessment: [
+      // Hypothesis names a specific mechanism
+      has('tension','variance','wear','friction','alignment','calibration','cycle time','setup time','changeover time','learning curve','fatigue','degradation'),
+      // Evidence has specific data — frequency, observations, logs
+      hasNumber(/\d+\s*(event|occurrence|incident|time|case|instance)s?\s*(per|a|\/)\s*(shift|day|week)/i) ||
+        has('operators reported','logs show','data shows','we measured','we tracked','we recorded','numbers show'),
+      // Named something as ruled out
+      has('ruled out','not the cause','eliminated','confirmed not','maintenance is current','pm is current','has not changed','unchanged'),
+      // Contributing factor is specific and named
+      has('new hire','new operator','new material','new supplier','learning curve','training gap','standard work','setup','changeover'),
+      // Knowledge gap is specific — says what data is missing
+      has('shift-level data','operator-level data','no data on when','have not tracked','have not collected','no formal rca','investigation not started','not yet confirmed')
+    ],
+    recommendation: [
+      // 3 or more distinct actions
+      (v.split(/i will|we will|plan to|going to/).length - 1 >= 3) ||
+        hasNumber(/1\)[\s\S]*2\)[\s\S]*3\)/i),
+      // Owner named on at least one action (role/person + "will" or "by")
+      hasNumber(/(team lead|supervisor|manager|engineer|i)\s+will\s+\w+.*by/i) ||
+        has('owner:','assigned to','responsible:'),
+      // Specific date deadline (named day or month, not just "this week")
+      hasNumber(/by\s+(monday|tuesday|wednesday|thursday|friday|january|february|march|april|may|june|july|august|september|october|november|december|\d+\/\d+)/i),
+      // Actions reference the specific root cause (not just "fix it")
+      has('tension','supplier','material','operator training','standard work','rca','root cause analysis','formal investigation'),
+      // Verification includes a metric or specific review
+      has('review results with','report back to','measure oee','track oee','confirm oee','validate improvement','follow-up on','review findings')
+    ]
+  };
+
+  const depth = depthChecks[fieldId] || [];
+  const depthCount = depth.filter(Boolean).length;
+  const depthTotal = depth.length;
+
+  // ── RATING LOGIC ──────────────────────────────────────────────────────────
+  const missingCount = total - count;
+  let rating;
+
+  // Minimum floor: 3+ bullets = effort shown, cannot score Poor
+  const bulletFloor = (bulletData[fieldId] || []).length >= 3;
+  if      (missingCount >= 3)  rating = bulletFloor ? 'Fair' : 'Poor';
+  else if (missingCount === 2) rating = 'Fair';
+  else if (missingCount === 1) rating = 'Good';
+  else {
+    if   (depthCount >= 4) rating = 'Excellent';
+    else                   rating = 'Great';
+  }
+
+  return { rating, count, total, depthCount, depthTotal };
+}
+
+// ══════════════════════════════════════════
+//  IDK / INVESTIGATION PLAN
+// ══════════════════════════════════════════
+const idkBulletData     = { situation: [], background: [], assessment: [] };
+const idkActive         = { situation: false, background: false, assessment: false };
+const idkAttempts       = { situation: 0, background: 0, assessment: 0 };
+const sectionSummaryCache = {};
+let currentAnalysisTool   = null;
+
+function toggleIdk(fieldId) {
+  const checkbox = document.getElementById('idk-check-' + fieldId);
+  const planBox  = document.getElementById('idk-plan-' + fieldId);
+  const coachBox = document.getElementById('coach-' + fieldId);
+
+  if (!checkbox.checked) {
+    // Unchecking — close plan box and restore normal coach
+    idkActive[fieldId] = false;
+    planBox.classList.remove('open');
+    coachBox.style.display = '';
+    idkBulletData[fieldId] = [];
+    renderIdkBullets(fieldId);
+    return;
+  }
+
+  // Increment attempt counter
+  idkAttempts[fieldId] = (idkAttempts[fieldId] || 0) + 1;
+
+  // Strike 3 — stop pushing, accept they genuinely don't know
+  if (idkAttempts[fieldId] >= 3) {
+    const coachBox = document.getElementById('coach-' + fieldId);
+    coachBox.classList.add('visible');
+    coachBox.style.display   = '';
+    coachBox.style.background  = 'rgba(247,168,79,.08)';
+    coachBox.style.borderColor = 'rgba(247,168,79,.3)';
+    coachBox.querySelector('.ai-text').innerHTML = '<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(247,168,79,.1);border:1px solid rgba(247,168,79,.4);color:#f7a84f;margin-bottom:8px;">◑ Acknowledged</span><br/>It is clear you have reached your limit here. Focus your investigation plan on the gaps — identify who can help you find out what you do not know, what data you need to collect, and by when you will have answers.';
+    setTimeout(() => openIdkPlan(fieldId), 1200);
+    return;
+  }
+
+  // Strike 1 or 2 — validate normally
+  validateIdkIntent(fieldId);
+}
+
+async function validateIdkIntent(fieldId) {
+  const cfg      = getCfg();
+  const checkbox = document.getElementById('idk-check-' + fieldId);
+  const planBox  = document.getElementById('idk-plan-' + fieldId);
+  const coachBox = document.getElementById('coach-' + fieldId);
+  const bullets  = bulletData[fieldId];
+  const value    = getBulletText(fieldId).toLowerCase();
+
+  // ── Pass 1: Have they entered enough to justify checking this box? ──
+  const { count, total } = scoreSection(fieldId, getBulletText(fieldId));
+  const tooEmpty = count < 2; // less than 2 elements = definitely hasn't tried
+
+  // ── Pass 2: Do they show genuine limit language? ──
+  const limitKeywords = [
+    'unknown','unclear','cannot identify','could not identify','no changes',
+    'nothing changed','no data','have not been able','unable to determine',
+    'not been identified','no root cause','investigation needed',
+    'cannot confirm','not confirmed','still investigating','no pattern',
+    'no difference','rules out','ruled out','exhausted','no further'
+  ];
+  const hasLimitLanguage = limitKeywords.some(k => value.includes(k));
+
+  if (tooEmpty) {
+    // Uncheck and push them back — they clearly have not tried
+    checkbox.checked = false;
+    coachBox.classList.add('visible');
+    coachBox.style.display = '';
+    const rc = { bg:'rgba(247,95,95,.12)', border:'rgba(247,95,95,.35)', text:'#f75f5f' };
+    coachBox.style.background  = rc.bg;
+    coachBox.style.borderColor = rc.border;
+    const attemptNum = idkAttempts[fieldId] || 1;
+    const notYetMsg   = attemptNum >= 2
+      ? 'You still have more to add before reaching your limit. What do you know about when, where, or how often this happens? Add at least one more observation.'
+      : 'Add what you do know first — even partial information helps. Then check this box if you genuinely hit a wall.';
+    coachBox.querySelector('.ai-text').innerHTML = `<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:${rc.bg};border:1px solid ${rc.border};color:${rc.text};margin-bottom:8px;">⚠ Not Yet</span><br/>${notYetMsg}`;
+    return;
+  }
+
+  if (!hasLimitLanguage && !cfg.geminiKey) {
+    // No AI available — just open it with a soft nudge
+    openIdkPlan(fieldId);
+    return;
+  }
+
+  // ── Pass 3: Ask AI to judge genuine limit vs shortcut ──
+  coachBox.classList.add('visible');
+  coachBox.style.display = '';
+  coachBox.style.background  = 'rgba(247,168,79,.08)';
+  coachBox.style.borderColor = 'rgba(247,168,79,.3)';
+  coachBox.querySelector('.ai-text').innerHTML = '<span class="ai-thinking">Checking if you have genuinely reached your limit...</span>';
+
+  const sectionLabels = { situation:'Situation', background:'Background', assessment:'Assessment' };
+
+  // Build prior context for IDK validation too
+  const idkSectionOrder = ['situation','background','assessment'];
+  const idkCurrentIdx   = idkSectionOrder.indexOf(fieldId);
+  const idkPriorContext = idkSectionOrder
+    .slice(0, idkCurrentIdx)
+    .filter(id => bulletData[id] && bulletData[id].length)
+    .map(id => {
+      const lbl = id.charAt(0).toUpperCase() + id.slice(1);
+      return lbl + ':\n' + getBulletText(id);
+    })
+    .join('\n\n');
+
+  const prompt = `A supervisor is filling out the "${sectionLabels[fieldId]}" section of an SBAR operations report and just checked a box saying "I have exhausted what I know."
+
+${idkPriorContext ? 'For context, here is what they wrote in prior sections:\n' + idkPriorContext + '\n\n' : ''}Here is what they have entered so far in the current section:
+${getBulletText(fieldId)}
+
+Your job: Determine if they have GENUINELY reached their knowledge limit, or if they are using this as a shortcut to skip ahead.
+
+Look for:
+- Genuine limit signals: words like "unknown", "no changes identified", "cannot determine", "no data", "ruled out", "still investigating"
+- Shortcut signals: very short responses, no attempt to explain what IS known, no acknowledgment of gaps
+
+Respond with ONLY one of these two formats:
+
+GENUINE: [one sentence affirming they can proceed to the investigation plan]
+PUSHBACK: [one direct sentence naming what they still haven't captured that they probably DO know, and telling them to add it first]
+
+No preamble. No extra text. Just GENUINE: or PUSHBACK: followed by the message.`;
+
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const d  = await r.json();
+    const raw = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+
+    if (raw.startsWith('GENUINE')) {
+      const msg = raw.replace(/^GENUINE:\s*/i, '');
+      coachBox.style.background  = 'rgba(62,207,142,.08)';
+      coachBox.style.borderColor = 'rgba(62,207,142,.3)';
+      coachBox.querySelector('.ai-text').innerHTML = `<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.4);color:#3ecf8e;margin-bottom:8px;">✦ Acknowledged</span><br/>${msg}`;
+      setTimeout(() => openIdkPlan(fieldId), 1200);
+    } else {
+      // Pushback — uncheck and show message
+      checkbox.checked = false;
+      const msg       = raw.replace(/^PUSHBACK:\s*/i, '');
+      const attemptN  = idkAttempts[fieldId] || 1;
+      const tagLabel  = attemptN >= 2 ? 'Almost There' : 'One More Thing';
+      const rc        = { bg:'rgba(247,168,79,.10)', border:'rgba(247,168,79,.35)', text:'#f7a84f' };
+      coachBox.style.background  = rc.bg;
+      coachBox.style.borderColor = rc.border;
+      coachBox.querySelector('.ai-text').innerHTML = `<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:${rc.bg};border:1px solid ${rc.border};color:${rc.text};margin-bottom:8px;">◑ ${tagLabel}</span><br/>${msg}`;
+    }
+  } catch(e) {
+    // On error — give benefit of the doubt and open plan
+    openIdkPlan(fieldId);
+  }
+}
+
+function openIdkPlan(fieldId) {
+  const planBox  = document.getElementById('idk-plan-' + fieldId);
+  const coachBox = document.getElementById('coach-' + fieldId);
+  idkActive[fieldId] = true;
+  planBox.classList.add('open');
+  coachBox.style.display = 'none';
+  document.getElementById('idk-input-' + fieldId).focus();
+}
+
+function addIdkBullet(fieldId) {
+  const input = document.getElementById('idk-input-' + fieldId);
+  const text  = input.value.trim();
+  if (!text) return;
+  idkBulletData[fieldId].push(text);
+  input.value = '';
+  renderIdkBullets(fieldId);
+  fetchIdkCoaching(fieldId);
+}
+
+function removeIdkBullet(fieldId, index) {
+  idkBulletData[fieldId].splice(index, 1);
+  renderIdkBullets(fieldId);
+  if (idkBulletData[fieldId].length) fetchIdkCoaching(fieldId);
+}
+
+function renderIdkBullets(fieldId) {
+  const container = document.getElementById('idk-bullets-' + fieldId);
+  const bullets   = idkBulletData[fieldId];
+  if (!bullets.length) { container.innerHTML = ''; return; }
+  container.innerHTML = bullets.map((text, i) => `
+    <div class="bullet-item">
+      <span class="bullet-dot">•</span>
+      <span class="bullet-text">${escapeHtml(text)}</span>
+      <button class="bullet-remove" onclick="removeIdkBullet('${fieldId}', ${i})" title="Remove">✕</button>
+    </div>
+  `).join('');
+}
+
+async function fetchIdkCoaching(fieldId) {
+  const cfg = getCfg();
+  if (!cfg.geminiKey) return;
+
+  const bullets  = idkBulletData[fieldId];
+  if (!bullets.length) return;
+
+  const value    = bullets.map(b => '• ' + b).join('\n');
+  const box      = document.getElementById('idk-coach-' + fieldId);
+  box.classList.add('visible');
+  box.querySelector('.ai-text').innerHTML = '<span class="ai-thinking">Evaluating your investigation plan...</span>';
+
+  // Score the investigation plan strictly as a Recommendation-style action plan
+  const v  = value.toLowerCase();
+  const has  = (...t) => t.some(x => v.includes(x.toLowerCase()));
+  const hasN = p => p.test(value);
+
+  const planChecks = [
+    // 1. At least one concrete action (including holding a meeting counts)
+    hasN(/1\)|2\)|step 1|step 2/i) || (v.split(/i will|we will|plan to|going to|will hold|will schedule|will meet/).length - 1 >= 1),
+    // 2. Owner identified (I will = valid owner)
+    has('i will','we will','assigned to','owner:','responsible:','team lead','supervisor','manager will','engineer will'),
+    // 3. Deadline or specific time stated
+    hasN(/by\s+(monday|tuesday|wednesday|thursday|friday|january|february|march|april|may|june|july|august|september|october|november|december|\d+\/\d+)/i) ||
+      hasN(/by\s+(end of|close of)\s+(this|next)?\s*(week|month|day)/i) ||
+      hasN(/within\s+\d+\s*(day|week|business day)s?/i) ||
+      has('thursday','friday','monday','tuesday','wednesday','this week','next week','tomorrow','today','9am','10am','11am','noon'),
+    // 4. Data or investigation activity planned
+    has('data','log','track','measure','investigate','inspect','test','analyze','collect','review','check','meeting','discuss','walk','observe'),
+    // 5. Outcome or follow-up defined
+    has('report','share','follow up','present','update','feedback','findings','decision','determine','identify','resolve','outcome')
+  ];
+  const planCount   = planChecks.filter(Boolean).length;
+  const planMissing = 5 - planCount;
+  let planRating;
+  if      (planMissing >= 3) planRating = 'Poor';
+  else if (planMissing === 2) planRating = 'Fair';
+  else if (planMissing === 1) planRating = 'Good';
+  else                        planRating = 'Excellent';
+
+  const toneMap = {
+    Poor:      'Acknowledge what they have specifically — if they mention a meeting, push on what the meeting will PRODUCE. Ask: what data will be reviewed, who needs to attend, and what decision needs to come out of it. Never say "vague" — instead ask the specific next question their response raises.',
+    Fair:      'Acknowledge what is good. Name the specific gap — missing owner, missing deadline, or missing outcome — and ask one direct question about their actual content to fill it.',
+    Good:      'Affirm what makes this a solid plan. Give one specific suggestion tied to what they wrote. Tell them they are ready to proceed.',
+    Excellent: 'Affirm this is a strong investigation plan. Tell them they can move forward.'
+  };
+
+  const prompt = 'A supervisor is providing an investigation plan for the "' + fieldId + '" section of their SBAR report.' +
+    '\n\nTheir plan:\n' + value +
+    '\n\nPlan scored: ' + planRating + ' (' + planCount + '/5 elements). THE RATING IS FINAL.' +
+    '\n\nCoaching style: ' + toneMap[planRating] +
+    '\n\nCRITICAL RULES:\n- Always reference what they actually wrote\n- If they mention a meeting, ask what it will produce — what data, who attends, what decision comes out\n- If they mention an action, ask who owns it and by when\n- Never use the word "vague" — ask the specific follow-up question instead\n- Under 60 words. Just the coaching message, no preamble.';
+
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const d = await r.json();
+    const coachText = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    const ratingColors = {
+      Poor:      { bg: 'rgba(247,95,95,.12)',  border: 'rgba(247,95,95,.35)',  text: '#f75f5f' },
+      Fair:      { bg: 'rgba(247,168,79,.10)', border: 'rgba(247,168,79,.35)', text: '#f7a84f' },
+      Good:      { bg: 'rgba(79,142,247,.10)', border: 'rgba(79,142,247,.35)', text: '#4f8ef7' },
+      Excellent: { bg: 'rgba(62,207,142,.15)', border: 'rgba(62,207,142,.5)',  text: '#3ecf8e' },
+    };
+    const rc   = ratingColors[planRating] || ratingColors['Fair'];
+    const icon = planRating === 'Poor' ? '⚠ ' : planRating === 'Fair' ? '◑ ' : planRating === 'Good' ? '✓ ' : '✦ ';
+
+    box.style.background   = rc.bg;
+    box.style.borderColor  = rc.border;
+    box.querySelector('.ai-text').innerHTML = `<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:${rc.bg};border:1px solid ${rc.border};color:${rc.text};margin-bottom:8px;">${icon}${planRating}</span><br/>${coachText}`;
+
+    // Unlock next section if Good or Excellent — and flag submission
+    const passingRatings = ['Good', 'Excellent'];
+    if (passingRatings.includes(planRating)) {
+      const unlockOrder = { situation: 'background', background: 'assessment', assessment: 'recommendation' };
+      const nextId = unlockOrder[fieldId];
+      if (nextId) {
+        const nextCard = document.getElementById('card-' + nextId);
+        if (nextCard) {
+          nextCard.style.display = 'block';
+          nextCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+      if (fieldId === 'assessment') {
+        document.getElementById('submit-row').style.display = 'flex';
+      }
+      // Generate section summary
+      generateSectionSummary(fieldId);
+      // Mark this section as flagged for dashboard
+      if (!window.flaggedSections) window.flaggedSections = [];
+      if (!window.flaggedSections.includes(fieldId)) window.flaggedSections.push(fieldId);
+    }
+  } catch(e) {
+    box.querySelector('.ai-text').textContent = 'Could not reach AI. Check your connection.';
+  }
+}
+
+// ══════════════════════════════════════════
+//  5 WHY / 5M1E ANALYSIS TOOLS
+// ══════════════════════════════════════════
+function toggleTool(tool) {
+  const fiveWhy = document.getElementById('tool-5why');
+  const fiveM   = document.getElementById('tool-5m1e');
+  if (tool === '5why') {
+    const showing = fiveWhy.style.display !== 'none';
+    fiveWhy.style.display = showing ? 'none' : 'block';
+    fiveM.style.display   = 'none';
+    if (!showing) fiveWhy.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    const showing = fiveM.style.display !== 'none';
+    fiveM.style.display   = showing ? 'none' : 'block';
+    fiveWhy.style.display = 'none';
+    if (!showing) fiveM.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function applyWhyAnalysis() {
+  const problem = document.getElementById('why-problem').value.trim();
+  const whys    = [1,2,3,4,5].map(n => document.getElementById('why-' + n).value.trim()).filter(Boolean);
+  if (!problem && !whys.length) { alert('Please fill in at least the problem statement and one why.'); return; }
+  if (problem) bulletData['assessment'].push('Problem: ' + problem);
+  whys.forEach((w, i) => bulletData['assessment'].push('Why ' + (i+1) + ': ' + w));
+  if (whys.length >= 3) bulletData['assessment'].push('Root cause identified: ' + whys[whys.length-1]);
+  renderBullets('assessment');
+  syncHidden('assessment');
+  onFieldInput('assessment');
+  document.getElementById('tool-5why').style.display = 'none';
+  document.getElementById('card-assessment').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function applyM1eAnalysis() {
+  const fields = ['man','machine','material','method','measurement','environment'];
+  const labels = { man:'People', machine:'Equipment', material:'Material', method:'Process', measurement:'Measurement', environment:'Environment' };
+  let added = 0;
+  fields.forEach(f => {
+    const val = document.getElementById('m1e-' + f).value.trim();
+    if (val) { bulletData['assessment'].push(labels[f] + ': ' + val); added++; }
+  });
+  if (!added) { alert('Please fill in at least one category.'); return; }
+  renderBullets('assessment');
+  syncHidden('assessment');
+  onFieldInput('assessment');
+  document.getElementById('tool-5m1e').style.display = 'none';
+  document.getElementById('card-assessment').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+// ══════════════════════════════════════════
+//  SECTION SUMMARIES
+// ══════════════════════════════════════════
+async function generateSectionSummary(fieldId) {
+  const cfg = getCfg();
+  if (!cfg.geminiKey) return;
+  const card = document.getElementById('summary-card-' + fieldId);
+  const body = document.getElementById('summary-body-' + fieldId);
+  if (!card || !body) return;
+  card.classList.add('visible');
+  body.innerHTML = '<span class="section-summary-thinking">Generating summary...</span>';
+  const labels = { situation:'Situation', background:'Background', assessment:'Assessment', recommendation:'Recommendation' };
+  const label  = labels[fieldId];
+  const bullets = getBulletText(fieldId);
+  const idkPlan = (idkBulletData[fieldId] || []).length
+    ? '\nInvestigation Plan:\n' + idkBulletData[fieldId].map(b => '- ' + b).join('\n') : '';
+  const promptParts = [
+    { text: 'You are formalizing notes from an operations supervisor SBAR report.' },
+    { text: 'Section: ' + label },
+    { text: 'Their bullet points:' },
+    { text: bullets },
+    { text: idkPlan || '' },
+    { text: 'Write a clean professional 2-4 sentence summary of ONLY what they stated. Fix spelling and grammar. Do NOT add new information. Write in flowing prose in third person. Start with "The ' + label + ' section indicates..."' }
+  ];
+  const promptText = promptParts.map(p => p.text).filter(Boolean).join('\n\n');
+  try {
+    const res  = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+    });
+    const d = await res.json();
+    if (d.error) throw new Error(d.error.message);
+    const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) throw new Error('Empty response from AI');
+    body.textContent = text;
+    sectionSummaryCache[fieldId] = text;
+  } catch(e) {
+    body.innerHTML = '<span style="color:var(--danger)">Summary error: ' + e.message + '</span>';
+  }
+}
+
+async function generateFullSummary(name, line, sit, bg, assess, rec, key) {
+  if (!key) return 'AI summary unavailable.';
+  const sitSum  = sectionSummaryCache['situation']      || sit;
+  const bgSum   = sectionSummaryCache['background']     || bg;
+  const assSum  = sectionSummaryCache['assessment']     || assess;
+  const recSum  = sectionSummaryCache['recommendation'] || rec;
+  const model   = getCfg().geminiModel;
+  const prompt = [
+    'You are writing a formal operations report for a senior management audience.',
+    '',
+    'Supervisor: ' + name + ' | Line/Department: ' + line,
+    '',
+    'Source material:',
+    'SITUATION: ' + sitSum,
+    'BACKGROUND: ' + bgSum,
+    'ASSESSMENT: ' + assSum,
+    'RECOMMENDATION: ' + recSum,
+    '',
+    'Write a single cohesive professional narrative (4-5 paragraphs) following these rules:',
+    '1. READ ALL SECTIONS FIRST before writing — identify what information appears across sections and weave it together naturally',
+    '2. NEVER repeat the same fact twice — if OEE is mentioned in Situation, do not restate it in Background',
+    '3. Each paragraph should ADVANCE the story — Situation establishes the problem, Background explains the context, Assessment explains the cause, Recommendation states the path forward',
+    '4. Write as one flowing document — do NOT use section headers like "Situation:" or "Background:" in the output',
+    '5. Fix all spelling and grammar errors from the source material',
+    '6. Do NOT add any new information, assumptions, or analysis beyond what is in the source material',
+    '7. Use formal operations management language appropriate for senior leadership',
+    '8. The opening sentence should clearly state who, what line, and what the core issue is',
+    '9. The closing sentence should state the expected outcome of the recommended actions',
+    '10. If any section noted an investigation is needed, weave that naturally into the narrative as an acknowledged gap with a plan'
+  ].join('\n');
+  try {
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const d = await res.json();
+    return d.candidates?.[0]?.content?.parts?.[0]?.text || 'Summary unavailable.';
+  } catch(e) { return 'Summary could not be generated.'; }
+}
+
+// ══════════════════════════════════════════
+//  FULL SUMMARY PREVIEW
+// ══════════════════════════════════════════
+async function showFullSummaryPreview() {
+  const cfg     = getCfg();
+  const preview = document.getElementById('full-summary-preview');
+  const body    = document.getElementById('full-summary-preview-body');
+  preview.style.display = 'block';
+  preview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const name   = document.getElementById('supName').value.trim();
+  const line   = document.getElementById('supLine').value.trim();
+  const sit    = getBulletText('situation');
+  const bg     = getBulletText('background');
+  const assess = getBulletText('assessment');
+  const rec    = getBulletText('recommendation');
+
+  const text = await generateFullSummary(name, line, sit, bg, assess, rec, cfg.geminiKey);
+  body.textContent = text;
+  // Cache it for submission
+  window.cachedFullSummary = text;
+}
+
+async function regenerateFullPreview() {
+  const body = document.getElementById('full-summary-preview-body');
+  body.innerHTML = '<span style="color:var(--muted);font-style:italic;">Regenerating...</span>';
+  await showFullSummaryPreview();
+}
+
+function copyFullSummary() {
+  const body = document.getElementById('full-summary-preview-body');
+  const text = body.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('✓ Copied to clipboard!', 'success');
+  }).catch(() => {
+    // Fallback for browsers that block clipboard
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity  = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✓ Copied to clipboard!', 'success');
+  });
+}
+
+function toggleExample(fieldId) {
+  const box = document.getElementById('example-box-' + fieldId);
+  const btn = document.getElementById('example-toggle-' + fieldId);
+  const open = box.classList.toggle('open');
+  btn.textContent = (open ? '▾' : '▸') + ' See an example';
+}
+
+async function fetchCoaching(fieldId, value) {
+  const cfg = getCfg();
+  if (!cfg.geminiKey || !cfg.geminiModel) return;
+  showCoachThinking(fieldId);
+
+  // Build prior context
+  const sectionOrder = ['situation','background','assessment','recommendation'];
+  const currentIdx   = sectionOrder.indexOf(fieldId);
+  const priorContext = sectionOrder.slice(0, currentIdx)
+    .filter(id => bulletData[id] && bulletData[id].length)
+    .map(id => id.charAt(0).toUpperCase() + id.slice(1) + ':\n' + getBulletText(id))
+    .join('\n\n');
+
+  const { label } = fieldLabels[fieldId];
+  const { rating, count, total } = scoreSection(fieldId, value);
+
+  const nextSection = { situation:'Background', background:'Assessment', assessment:'Recommendation', recommendation:null };
+  const missingElements = {
+    situation:      ['specific line or machine named','exact metric with number','target stated with number','how long this has been happening','which pillar is driving the gap','business impact quantified'],
+    background:     ['historical baseline or normal performance','when the problem started','recent changes to people materials or equipment','why this matters if unresolved','what has been tried or ruled out'],
+    assessment:     ['specific root cause hypothesis','evidence or data supporting hypothesis','alternative causes considered','contributing factors','knowledge gaps acknowledged'],
+    recommendation: ['at least 2 specific actions','owner for each action','deadline for each action','addresses root cause','follow-up or verification step']
+  };
+  const toneMap = {
+    Poor:      'Acknowledge what they have written specifically — name it. Then identify the single most important next step based on what they wrote and ask one sharp, specific follow-up question about it. Example style: "You have identified X — good start. But what about Y? Specifically, [question]." Never be dismissive.',
+    Fair:      'Acknowledge what is good about what they wrote specifically. Then push on the 1-2 most important gaps with a specific follow-up question tied directly to what they said. Example style: "You mention [X] — that is helpful. Now push further: [specific question about their actual content]."',
+    Good:      'Briefly affirm what makes this solid. Give one specific suggestion tied to what they actually wrote to make it stronger. End with: "You are ready to move to ' + (nextSection[fieldId] || 'submitting') + '."',
+    Great:     'Affirm in one sentence what specifically makes this strong. Say "Move on to ' + (nextSection[fieldId] || 'submitting') + ' — you are done here." No questions.',
+    Excellent: 'Affirm in one sentence. Say "Excellent — move on to ' + (nextSection[fieldId] || 'submitting') + '." No questions.'
+  };
+
+  const coachingExamples = {
+    situation: 'Example good coaching: "You identified the line and OEE — solid. Now push further: what specific loss category is driving the gap? Is it availability, performance, or quality? Name it and quantify it."',
+    background: 'Example good coaching: "You noted the problem started in January — good. But what specifically changed in January? A supplier, a process, a person? The more specific you are, the more useful your background becomes."',
+    assessment: 'Example good coaching: "A meeting is a good first step but it is not an investigation plan. What will you do IN the meeting? What data will you bring? Who needs to attend and what decision or finding do you need to walk out with?"',
+    recommendation: 'Example good coaching: "You have an action — good. But who specifically owns it? What does done look like? Give it a deadline and define the outcome you expect, not just the task."'
+  };
+
+  const missing     = missingElements[fieldId] || [];
+  const contextNote = priorContext ? '\n\nPrior sections already written:\n' + priorContext + '\n\nIMPORTANT: Do NOT ask them to restate info already captured above.' : '';
+  const prompt = 'You are coaching an operations supervisor on the "' + label + '" section of a monthly SBAR report.' +
+    '\n\nTheir response:\n' + value +
+    '\n\nRating: ' + rating + ' (' + count + ' of ' + total + ' elements). THE RATING IS FINAL — do not change it.' +
+    '\n\nCoaching style instruction: ' + toneMap[rating] +
+    '\n\nMissing elements not yet detected: ' + missing.join(', ') +
+    '\n\n' + coachingExamples[fieldId] +
+    contextNote +
+    '\n\nCRITICAL RULES:\n- Always reference what they actually wrote — never give generic advice\n- Ask questions that logically follow from their specific content\n- If they mention a meeting, ask what the meeting will produce\n- If they mention a cause, ask what evidence supports it\n- If they mention an action, ask who owns it and by when\n- Never repeat the rating label in your message\n- Under 70 words. Write ONLY the coaching message, no preamble.';
+
+  try {
+    const res  = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const coachText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    const ratingColors = {
+      Poor:      { bg:'rgba(247,95,95,.12)',  border:'rgba(247,95,95,.35)',  text:'#f75f5f' },
+      Fair:      { bg:'rgba(247,168,79,.10)', border:'rgba(247,168,79,.35)', text:'#f7a84f' },
+      Good:      { bg:'rgba(79,142,247,.10)', border:'rgba(79,142,247,.35)', text:'#4f8ef7' },
+      Great:     { bg:'rgba(62,207,142,.10)', border:'rgba(62,207,142,.35)', text:'#3ecf8e' },
+      Excellent: { bg:'rgba(62,207,142,.15)', border:'rgba(62,207,142,.5)',  text:'#3ecf8e' }
+    };
+    const rc   = ratingColors[rating] || ratingColors.Fair;
+    const icon = rating === 'Poor' ? '⚠ ' : rating === 'Fair' ? '◑ ' : rating === 'Good' ? '✓ ' : '✦ ';
+    const box  = document.getElementById('coach-' + fieldId);
+    box.style.background  = rc.bg;
+    box.style.borderColor = rc.border;
+    box.querySelector('.ai-text').innerHTML = '<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:' + rc.bg + ';border:1px solid ' + rc.border + ';color:' + rc.text + ';margin-bottom:8px;">' + icon + rating + '</span><br/>' + coachText;
+
+    // Unlock next section if Good or better
+    const passingRatings = ['Good','Great','Excellent'];
+    if (passingRatings.includes(rating)) {
+      generateSectionSummary(fieldId);
+      const unlockMap = { situation:'background', background:'assessment', assessment:'recommendation', recommendation:null };
+      const nextId = unlockMap[fieldId];
+      if (nextId) {
+        setTimeout(() => {
+          document.getElementById('card-' + nextId).style.display = 'block';
+          const sc = document.getElementById('summary-card-' + fieldId);
+          if (sc) sc.scrollIntoView({ behavior:'smooth', block:'start' });
+        }, 300);
+      }
+      if (fieldId === 'recommendation') {
+        document.getElementById('submit-row').style.display = 'flex';
+        showFullSummaryPreview();
+      }
+    }
+
+    // Fetch example separately — failure won't affect coaching
+    fetchExample(fieldId, label, cfg);
+
+  } catch(e) {
+    const box = document.getElementById('coach-' + fieldId);
+    if (box) {
+      box.classList.add('visible');
+      box.querySelector('.ai-text').innerHTML = '<span style="color:var(--danger)">AI error: ' + e.message + '</span>';
+    }
+  }
+}
+
+async function fetchExample(fieldId, label, cfg) {
+  const industries = ['a hospital nurse station','a restaurant kitchen','a retail warehouse','a hotel front desk','a construction site','a call center','a school cafeteria','a delivery logistics hub'];
+  const industry   = industries[Math.floor(Math.random() * industries.length)];
+  const prompt     = 'Write a realistic example of a well-written "' + label + '" section of an SBAR report from ' + industry + '. Use 2-4 bullet points starting with bullet character, specific with real numbers. Do NOT mention manufacturing or OEE. No intro text, just the bullets.';
+  try {
+    const res  = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (text) {
+      document.getElementById('example-text-' + fieldId).innerHTML = text.replace(/\n/g, '<br/>');
+      const btn = document.getElementById('example-toggle-' + fieldId);
+      if (btn) { btn.style.display = 'inline-flex'; btn.textContent = '▸ See an example'; }
+      const exBox = document.getElementById('example-box-' + fieldId);
+      if (exBox) exBox.classList.remove('open');
+    }
+  } catch(e) { /* example failure is silent */ }
+}
+
+// ══════════════════════════════════════════
+//  SUBMIT
+// ══════════════════════════════════════════
+async function submitForm() {
+  const name   = document.getElementById('supName').value.trim();
+  const line   = document.getElementById('supLine').value.trim();
+  const sit    = getBulletText('situation');
+  const bg     = getBulletText('background');
+  const assess = getBulletText('assessment');
+  const rec    = getBulletText('recommendation');
+
+  if (!name || !line) {
+    showToast('Please enter your name and line/department.', 'error'); return;
+  }
+  if (!bulletData.situation.length || !bulletData.background.length ||
+      !bulletData.assessment.length || !bulletData.recommendation.length) {
+    showToast('Please add at least one bullet point to each section.', 'error'); return;
+  }
+
+  const cfg = getCfg();
+  if (!cfg.scriptUrl) {
+    showToast('Apps Script URL not configured. Please visit the Setup tab.', 'error'); return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  document.getElementById('submitStatus').textContent = 'Generating AI summary...';
+
+  // 1. Get AI summary
+  // Use cached preview summary if available, otherwise generate fresh
+  const aiSummary = window.cachedFullSummary || await generateFullSummary(name, line, sit, bg, assess, rec, cfg.geminiKey);
+
+  // 2. Save to Google Sheet
+  document.getElementById('submitStatus').textContent = 'Saving to Google Sheets...';
+  try {
+    // Encode as URL params — avoids CORS preflight issues with Apps Script
+    const params = new URLSearchParams({
+      supervisorName: name,
+      line,
+      situation: sit,
+      background: bg,
+      assessment: assess,
+      recommendation: rec,
+      aiSummary,
+      flagged: (window.flaggedSections && window.flaggedSections.length) ? 'Needs investigation: ' + window.flaggedSections.join(', ') : '',
+      situationSummary:     sectionSummaryCache['situation']      || '',
+      backgroundSummary:    sectionSummaryCache['background']     || '',
+      assessmentSummary:    sectionSummaryCache['assessment']     || '',
+      recommendationSummary:sectionSummaryCache['recommendation'] || ''
+    });
+    await fetch(cfg.scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+    showToast('✓ Submission saved successfully!', 'success');
+  } catch(e) {
+    showToast('Could not reach Google Sheets. Check your Apps Script URL in Setup.', 'error');
+  }
+
+  // 3. Show summary
+  document.getElementById('summaryBody').textContent = aiSummary;
+  document.getElementById('summaryCard').classList.add('visible');
+  document.getElementById('submitStatus').textContent = '';
+  btn.disabled = false;
+  document.getElementById('summaryCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function generateSummary(name, line, sit, bg, assess, rec, key) {
+  if (!key) return 'AI summary unavailable — no Gemini API key configured.';
+  const prompt = `You are reviewing a monthly SBAR operations report from a supervisor named ${name} (${line}).
+
+SITUATION: ${sit}
+BACKGROUND: ${bg}
+ASSESSMENT: ${assess}
+RECOMMENDATION: ${rec}
+
+Write a concise post-submit summary for the supervisor (2-3 paragraphs) that:
+1. Acknowledges the key issue they identified
+2. Highlights any gaps in their thinking or analysis they should still consider
+3. Lists 2-3 "things to keep thinking about" going into next month
+
+Be direct, supportive, and practical. Speak to the supervisor directly.`;
+
+  try {
+    const model = getCfg().geminiModel;
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const d = await r.json();
+    return d.candidates?.[0]?.content?.parts?.[0]?.text || 'Summary unavailable.';
+  } catch(e) {
+    return 'AI summary could not be generated at this time.';
+  }
+}
+
+function clearForm() {
+  ['supName','supLine'].forEach(id => document.getElementById(id).value = '');
+  ['situation','background','assessment','recommendation'].forEach(id => {
+    bulletData[id] = [];
+    renderBullets(id);
+    document.getElementById(id).value = '';
+    document.getElementById('bullet-input-' + id).value = '';
+    hideCoach(id);
+    document.getElementById('card-' + id).style.display = 'none';
+  });
+  document.getElementById('submit-row').style.display = 'none';
+  document.getElementById('summaryCard').classList.remove('visible');
+  document.getElementById('progressFill').style.width = '0%';
+  // Reset summaries and IDK state
+  Object.keys(sectionSummaryCache).forEach(k => delete sectionSummaryCache[k]);
+  window.cachedFullSummary = null;
+  document.getElementById('full-summary-preview').style.display = 'none';
+  ['situation','background','assessment','recommendation'].forEach(id => {
+    const sc = document.getElementById('summary-card-' + id);
+    if (sc) { sc.classList.remove('visible'); }
+  });
+  window.flaggedSections = [];
+  Object.keys(idkAttempts).forEach(k => idkAttempts[k] = 0);
+  ['situation','background','assessment'].forEach(id => {
+    idkBulletData[id] = [];
+    idkActive[id] = false;
+    document.getElementById('idk-check-' + id).checked = false;
+    document.getElementById('idk-plan-' + id).classList.remove('open');
+    document.getElementById('idk-bullets-' + id).innerHTML = '';
+    document.getElementById('idk-input-' + id).value = '';
+    document.getElementById('idk-coach-' + id).classList.remove('visible');
+    document.getElementById('coach-' + id).style.display = '';
+  });
+}
+function startNewForm() {
+  clearForm();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════
+let allSubmissions = [];
+
+function unlockSetup() {
+  const entered = document.getElementById('setupLockPass').value;
+  const cfg = getCfg();
+  if (entered === cfg.dashPass) {
+    document.getElementById('setup-lock').style.display = 'none';
+    document.getElementById('setup-content').style.display = 'block';
+    populateSetupFields();
+  } else {
+    showToast('Incorrect password.', 'error');
+  }
+}
+
+async function loadDashboard() {
+  const cfg = getCfg();
+  if (!cfg.scriptUrl) {
+    document.getElementById('submissions-list').innerHTML = '<div class="empty-state"><div class="icon">⚙️</div><p>Apps Script URL not configured. Visit the Setup tab.</p></div>';
+    return;
+  }
+  document.getElementById('dashSubtitle').textContent = 'Loading...';
+  try {
+    const r = await fetch(cfg.scriptUrl + '?action=getAll');
+    const d = await r.json();
+    allSubmissions = (d.data || []).reverse(); // newest first
+    populateFilters();
+    renderSubmissions();
+    updateStats();
+    document.getElementById('dashSubtitle').textContent = `${allSubmissions.length} total submission${allSubmissions.length !== 1 ? 's' : ''}`;
+  } catch(e) {
+    document.getElementById('submissions-list').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Could not load data. Check your Apps Script URL.</p></div>';
+  }
+}
+
+function populateFilters() {
+  const names  = [...new Set(allSubmissions.map(s => s.supervisorName).filter(Boolean))].sort();
+  const lines  = [...new Set(allSubmissions.map(s => s.line).filter(Boolean))].sort();
+  const months = [...new Set(allSubmissions.map(s => s.month).filter(Boolean))];
+
+  const nameEl  = document.getElementById('filterName');
+  const lineEl  = document.getElementById('filterLine');
+  const monthEl = document.getElementById('filterMonth');
+
+  nameEl.innerHTML  = '<option value="">All Supervisors</option>' + names.map(n => `<option>${n}</option>`).join('');
+  lineEl.innerHTML  = '<option value="">All Lines</option>'       + lines.map(l => `<option>${l}</option>`).join('');
+  monthEl.innerHTML = '<option value="">All Months</option>'      + months.map(m => `<option>${m}</option>`).join('');
+}
+
+function updateStats() {
+  const now = new Date();
+  const thisMonth = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  document.getElementById('stat-total').textContent = allSubmissions.length;
+  document.getElementById('stat-supervisors').textContent = new Set(allSubmissions.map(s => s.supervisorName)).size;
+  document.getElementById('stat-month').textContent = allSubmissions.filter(s => s.month === thisMonth).length;
+}
+
+function renderSubmissions() {
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+  const name   = document.getElementById('filterName').value;
+  const line   = document.getElementById('filterLine').value;
+  const month  = document.getElementById('filterMonth').value;
+
+  const filtered = allSubmissions.filter(s => {
+    if (name  && s.supervisorName !== name) return false;
+    if (line  && s.line !== line)           return false;
+    if (month && s.month !== month)         return false;
+    if (search) {
+      const blob = [s.supervisorName, s.line, s.situation, s.background, s.assessment, s.recommendation, s.aiSummary].join(' ').toLowerCase();
+      if (!blob.includes(search)) return false;
+    }
+    return true;
+  });
+
+  const list = document.getElementById('submissions-list');
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No submissions match your filters.</p></div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map((s, i) => `
+    <div class="sub-card" onclick="toggleSub(${i})">
+      <div class="sub-header">
+        <div>
+          <div class="sub-name">${s.supervisorName || 'Unknown'}</div>
+          <div style="font-size:12px; color:var(--muted); margin-top:3px;">${s.line || ''}</div>
+        </div>
+        <div class="sub-meta">
+          ${s.flagged ? `<span class="tag" style="background:rgba(247,168,79,.15);color:#f7a84f;" title="${s.flagged}">⚠ Needs Investigation</span>` : ''}
+          <span class="tag tag-purple">${s.month || ''}</span>
+          <span style="font-size:12px; color:var(--muted);">${s.timestamp || ''}</span>
+          <span style="font-size:18px; color:var(--muted); transition:.2s;" id="chevron-${i}">▸</span>
+        </div>
+      </div>
+      <div style="font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;">
+        ${(s.situation || '').substring(0, 120)}${(s.situation || '').length > 120 ? '...' : ''}
+      </div>
+      <div class="sub-body" id="sub-body-${i}">
+        <div class="sbar-grid">
+          <div class="sbar-item"><h4>Situation</h4><p>${s.situation || ''}</p></div>
+          <div class="sbar-item"><h4>Background</h4><p>${s.background || ''}</p></div>
+          <div class="sbar-item"><h4>Assessment</h4><p>${s.assessment || ''}</p></div>
+          <div class="sbar-item"><h4>Recommendation</h4><p>${s.recommendation || ''}</p></div>
+        </div>
+        ${s.aiSummary ? `<h4 style="margin-bottom:8px; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--success);">✦ AI Summary</h4><div class="ai-sum-block">${s.aiSummary}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleSub(i) {
+  const body    = document.getElementById('sub-body-' + i);
+  const chevron = document.getElementById('chevron-' + i);
+  const open    = body.classList.toggle('open');
+  chevron.textContent = open ? '▾' : '▸';
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.style.display = 'none', 4000);
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+window.onload = () => {
+  // Pre-load gemini key if not already saved
+  if (!localStorage.getItem('sbar_gemini_key')) {
+    localStorage.setItem('sbar_gemini_key', GEMINI_KEY_DEFAULT);
+  }
+};
+</script>
+</body>
+</html>
