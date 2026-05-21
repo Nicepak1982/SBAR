@@ -527,10 +527,20 @@
 </head>
 <body>
 
+<script>
+// Runs immediately on DOM ready — clears any browser session-restored values
+document.addEventListener('DOMContentLoaded', function() {
+  ['supName','supLine'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.value = ''; el.setAttribute('value',''); }
+  });
+});
+</script>
+
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">...</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v1.0</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -543,6 +553,7 @@
      PAGE: FORM
 ════════════════════════════════════════════════════ -->
 <div id="page-form" class="page active">
+  <form autocomplete="off" onsubmit="return false;" style="display:contents;">
   <div style="margin-bottom:32px;">
     <h1>Monthly SBAR</h1>
     <p class="subtitle">Take your time. Think through each section carefully — the AI will coach you along the way.</p>
@@ -580,11 +591,11 @@
     <div class="row2">
       <div class="field">
         <label>Your Name</label>
-        <input type="text" id="supName" name="supervisor_name_field" placeholder="First Last" autocomplete="new-password" oninput="updateProgress(); checkIdentityUnlock()" />
+        <input type="text" id="supName" name="supervisor_name_field" placeholder="First Last" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" oninput="updateProgress(); checkIdentityUnlock()" />
       </div>
       <div class="field">
         <label>Line / Department</label>
-        <input type="text" id="supLine" name="supervisor_line_field" placeholder="e.g. Line 3, Packaging, QA" autocomplete="new-password" oninput="updateProgress(); checkIdentityUnlock()" />
+        <input type="text" id="supLine" name="supervisor_line_field" placeholder="e.g. Line 3, Packaging, QA" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" oninput="updateProgress(); checkIdentityUnlock()" />
       </div>
     </div>
   </div>
@@ -895,6 +906,8 @@
   </div>
 
   <!-- Submit -->
+  </form>
+
   <!-- Full SBAR Summary Preview -->
   <div id="full-summary-preview" style="display:none; background:linear-gradient(135deg,rgba(79,142,247,.06),rgba(124,92,191,.06)); border:1px solid rgba(79,142,247,.25); border-radius:12px; padding:28px; margin-bottom:20px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
@@ -1041,7 +1054,7 @@
     </div>
     <div class="field" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
       <label>Version Number</label>
-      <input type="text" id="setupVersion" placeholder="e.g. v1.3" style="max-width:160px;" />
+      <input type="text" id="setupVersion" placeholder="e.g. v1.1" style="max-width:160px;" />
     </div>
     <div class="field">
       <label>Changelog — one bullet per line</label>
@@ -1098,13 +1111,16 @@
 // All other config (Gemini key, model, password) lives in Google Sheets
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3Lnep_C8_z9aV11x0IxA9_zzLh0dAWLxBG0MQsPmF4tR0yMgr7A/exec";
 
+// ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
+// Also update the changelog in Setup tab before pushing to GitHub
+const APP_VERSION = "v1.0";
+
 function getCfg() {
   return {
     scriptUrl:   SCRIPT_URL,
     geminiKey:   localStorage.getItem('sbar_gemini_key')   || '',
     geminiModel: localStorage.getItem('sbar_gemini_model') || 'gemini-1.5-flash',
     dashPass:    localStorage.getItem('sbar_dash_pass')    || 'admin',
-    version:     localStorage.getItem('sbar_version')      || 'v1.0',
     changelog:   localStorage.getItem('sbar_changelog')    || ''
   };
 }
@@ -1118,14 +1134,10 @@ async function loadConfigFromSheet() {
       if (d.config.geminiKey)   localStorage.setItem('sbar_gemini_key',   d.config.geminiKey);
       if (d.config.geminiModel) localStorage.setItem('sbar_gemini_model', d.config.geminiModel);
       if (d.config.dashPass)    localStorage.setItem('sbar_dash_pass',    d.config.dashPass);
-      // Cache and display version
-      const version   = d.config.version   || 'v1.0';
+      // Cache changelog info — version badge is hardcoded in HTML
+      const version   = d.config.version   || APP_VERSION;
       const changelog = d.config.changelog || '';
-      localStorage.setItem('sbar_version',   version);
       localStorage.setItem('sbar_changelog', changelog);
-      // Update version badge in nav
-      const versionEl = document.getElementById('nav-version');
-      if (versionEl) versionEl.textContent = version;
       // Store for changelog check after load
       window._pendingChangelog = { version, changelog };
     }
@@ -1159,8 +1171,8 @@ function populateSetupFields() {
   const keyEl = document.getElementById('setupGeminiKey');
   if (keyEl) keyEl.value = cfg.geminiKey || '';
   document.getElementById('setupPassword').value  = cfg.dashPass   || '';
-  document.getElementById('setupVersion').value   = cfg.version    || 'v1.0';
-  document.getElementById('setupChangelog').value = cfg.changelog  || '';
+  document.getElementById('setupVersion').value   = APP_VERSION;
+  document.getElementById('setupChangelog').value = cfg.changelog  || localStorage.getItem('sbar_changelog') || '';
   if (cfg.geminiKey) fetchGeminiModels(cfg.geminiModel);
 }
 
@@ -2615,13 +2627,6 @@ function showToast(msg, type) {
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-function initVersionBadge() {
-  // Show cached version immediately, Sheet will update if changed
-  const cached = localStorage.getItem('sbar_version');
-  const el = document.getElementById('nav-version');
-  if (el && cached) el.textContent = cached;
-}
-
 function hardResetForm() {
   // Force clear ALL inputs and textareas on the page — prevents browser session restore bleed
   document.querySelectorAll('input[type=text], input[type=password], textarea').forEach(el => {
@@ -2632,7 +2637,9 @@ function hardResetForm() {
 }
 
 window.onload = async () => {
-  initVersionBadge();
+  // Set version badge from hardcoded constant
+  const vEl = document.getElementById('nav-version');
+  if (vEl) vEl.textContent = APP_VERSION;
   hardResetForm();
   // Load config from Google Sheet — works for everyone automatically
   await loadConfigFromSheet();
