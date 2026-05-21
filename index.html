@@ -530,7 +530,7 @@
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v1.1</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v1.0</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -580,11 +580,11 @@
     <div class="row2">
       <div class="field">
         <label>Your Name</label>
-        <input type="text" id="supName" placeholder="First Last" oninput="updateProgress(); checkIdentityUnlock()" />
+        <input type="text" id="supName" name="supervisor_name_field" placeholder="First Last" autocomplete="new-password" oninput="updateProgress(); checkIdentityUnlock()" />
       </div>
       <div class="field">
         <label>Line / Department</label>
-        <input type="text" id="supLine" placeholder="e.g. Line 3, Packaging, QA" oninput="updateProgress(); checkIdentityUnlock()" />
+        <input type="text" id="supLine" name="supervisor_line_field" placeholder="e.g. Line 3, Packaging, QA" autocomplete="new-password" oninput="updateProgress(); checkIdentityUnlock()" />
       </div>
     </div>
   </div>
@@ -2615,7 +2615,17 @@ function showToast(msg, type) {
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
+function hardResetForm() {
+  // Force clear ALL inputs and textareas on the page — prevents browser session restore bleed
+  document.querySelectorAll('input[type=text], input[type=password], textarea').forEach(el => {
+    if (!el.closest('#page-setup') && !el.closest('#page-dashboard')) {
+      el.value = '';
+    }
+  });
+}
+
 window.onload = async () => {
+  hardResetForm();
   // Load config from Google Sheet — works for everyone automatically
   await loadConfigFromSheet();
   // Check changelog after config is loaded — shows on main screen
@@ -2624,6 +2634,11 @@ window.onload = async () => {
       checkChangelog(window._pendingChangelog.version, window._pendingChangelog.changelog);
     }, 800);
   }
+};
+
+// Also fires on back/forward cache restore (bfcache)
+window.onpageshow = function(e) {
+  if (e.persisted) hardResetForm();
 };
 </script>
 </body>
