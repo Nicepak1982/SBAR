@@ -2436,7 +2436,9 @@ async function loadDashboard() {
 function populateFilters() {
   const names  = [...new Set(allSubmissions.map(s => s.supervisorName).filter(Boolean))].sort();
   const lines  = [...new Set(allSubmissions.map(s => s.line).filter(Boolean))].sort();
-  const months = [...new Set(allSubmissions.map(s => s.month).filter(Boolean))];
+  // Only include valid month strings (e.g. "May 2026") not summary text
+  const monthPattern = /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}$/;
+  const months = [...new Set(allSubmissions.map(s => s.month).filter(m => m && monthPattern.test(m)))];
   const types  = [...new Set(allSubmissions.map(s => s.reportType).filter(Boolean))].sort();
 
   const nameEl  = document.getElementById('filterName');
