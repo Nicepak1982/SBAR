@@ -277,6 +277,25 @@
   .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 28px; overflow: hidden; }
   .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width .4s ease; }
 
+  /* ── REPORT TYPE SELECTOR ── */
+  .type-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    user-select: none;
+  }
+  .type-btn:hover { border-color: var(--accent); color: var(--text); }
+  .type-btn.active { border-color: var(--accent); background: rgba(79,142,247,.12); color: var(--accent); }
+
   /* ── SECTION SUMMARY CARD ── */
   .section-summary-card {
     background: linear-gradient(135deg, rgba(79,142,247,.06), rgba(124,92,191,.06));
@@ -538,6 +557,23 @@
       <div>
         <h2>Who Are You?</h2>
         <p class="subtitle">This identifies your submission in the dashboard.</p>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:18px;">
+      <label>Report Type</label>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <label class="type-btn active" id="type-btn-monthly" onclick="selectReportType('Monthly')">
+          <input type="radio" name="reportType" value="Monthly" checked style="display:none;" />
+          📅 Monthly
+        </label>
+        <label class="type-btn" id="type-btn-weekly" onclick="selectReportType('Weekly')">
+          <input type="radio" name="reportType" value="Weekly" style="display:none;" />
+          📋 Weekly
+        </label>
+        <label class="type-btn" id="type-btn-issue" onclick="selectReportType('Issue Specific')">
+          <input type="radio" name="reportType" value="Issue Specific" style="display:none;" />
+          ⚠ Issue Specific
+        </label>
       </div>
     </div>
     <div class="row2">
@@ -878,7 +914,7 @@
 
   <!-- AI Summary -->
   <div class="summary-card" id="summaryCard">
-    <h2>✦ AI Post-Submit Summary</h2>
+    <h2>✦ Coaching Debrief</h2>
     <div class="summary-body" id="summaryBody"></div>
     <div style="margin-top:20px;">
       <button class="btn btn-secondary" onclick="startNewForm()">Submit Another</button>
@@ -925,6 +961,7 @@
       <select id="filterName" onchange="renderSubmissions()"><option value="">All Supervisors</option></select>
       <select id="filterLine" onchange="renderSubmissions()"><option value="">All Lines</option></select>
       <select id="filterMonth" onchange="renderSubmissions()"><option value="">All Months</option></select>
+      <select id="filterType" onchange="renderSubmissions()"><option value="">All Types</option></select>
     </div>
 
     <!-- Submissions list -->
@@ -956,31 +993,32 @@
 
   <!-- Step 1: Apps Script -->
   <div class="card setup-section">
-    <h2 style="margin-bottom:16px;">Step 1 — Deploy the Apps Script</h2>
-    <ol class="step-list">
-      <li>Go to <strong>script.google.com</strong> and click <span class="tag tag-blue">New Project</span></li>
-      <li>Open the <code>apps_script.gs</code> file provided and paste all its contents, replacing any default code</li>
-      <li>Click <span class="tag tag-blue">Deploy</span> → <span class="tag tag-blue">New Deployment</span></li>
-      <li>Set Type to <strong>Web App</strong>, Execute as <strong>Me</strong>, Who has access <strong>Anyone</strong></li>
-      <li>Click <strong>Deploy</strong>, authorize permissions when prompted</li>
-      <li>Copy the <strong>Web App URL</strong> — you'll paste it below</li>
-    </ol>
-    <div style="margin-top:16px; background:rgba(247,168,79,.06); border:1px solid rgba(247,168,79,.2); border-radius:8px; padding:14px 16px; font-size:13px; color:#f7c97a;">
-      💡 The script will auto-create a sheet named <strong>SBAR_Submissions</strong> with all headers on the first submission. You don't need to set anything up in Sheets.
+    <h2 style="margin-bottom:16px;">Step 1 — Already Done ✓</h2>
+    <div style="background:rgba(62,207,142,.06); border:1px solid rgba(62,207,142,.2); border-radius:8px; padding:14px 16px; font-size:13px; color:#a8dfc4; line-height:1.8;">
+      ✓ Apps Script deployed and connected to Google Sheets<br/>
+      ✓ Gemini API key configured<br/>
+      ✓ Google Sheet ID hardcoded<br/>
+      ✓ This file is ready to share with supervisors as-is
+    </div>
+    <div style="margin-top:14px; background:rgba(247,168,79,.06); border:1px solid rgba(247,168,79,.2); border-radius:8px; padding:14px 16px; font-size:13px; color:#f7c97a;">
+      💡 All submissions save to the <strong>SBAR_Submissions</strong> tab in your Google Sheet automatically. The only thing you need to configure is the dashboard password below.
     </div>
   </div>
 
   <!-- Step 2: Config -->
   <div class="card setup-section">
-    <h2 style="margin-bottom:16px;">Step 2 — Enter Your Credentials</h2>
-    <div class="field">
-      <label>Google Apps Script Web App URL</label>
-      <input type="text" id="setupScriptUrl" placeholder="https://script.google.com/macros/s/..." />
+    <h2 style="margin-bottom:6px;">Step 2 — Configure</h2>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:20px;">The Apps Script URL and Gemini API key are pre-configured. You only need to set your preferred AI model and dashboard password.</p>
+
+    <div style="background:rgba(62,207,142,.06); border:1px solid rgba(62,207,142,.2); border-radius:8px; padding:14px 16px; margin-bottom:20px; font-size:13px; color:#a8dfc4;">
+      ✓ Apps Script URL: pre-configured in the file<br/>
+      ✓ All other config stored securely in Google Sheets
     </div>
+
     <div class="field">
       <label>Gemini API Key</label>
       <div style="display:flex; gap:10px;">
-        <input type="text" id="setupGeminiKey" placeholder="AIza..." style="flex:1;" oninput="onKeyInput()" />
+        <input type="text" id="setupGeminiKey" placeholder="AIza..." style="flex:1;" />
         <button class="btn btn-secondary" style="white-space:nowrap; flex-shrink:0;" onclick="fetchGeminiModels()">&#8635; Load Models</button>
       </div>
     </div>
@@ -989,8 +1027,8 @@
         <span>Gemini Model</span>
         <span id="model-status" style="font-size:11px; color:var(--muted); font-weight:400; text-transform:none; letter-spacing:0;"></span>
       </label>
-      <select id="setupModel">
-        <option value="">&#8212; Enter API key above to load models &#8212;</option>
+      <select id="setupModel" style="width:100%;">
+        <option value="">&#8212; Enter API key and click Load Models &#8212;</option>
       </select>
     </div>
     <div class="field">
@@ -1008,14 +1046,14 @@
   <div class="card">
     <h2 style="margin-bottom:12px;">Step 3 — Share the File</h2>
     <p style="font-size:14px; color:var(--text); line-height:1.7;">
-      Share <strong>sbar_form.html</strong> directly with your supervisors via email, shared drive, or any file sharing method. 
-      They open it in any browser — no installation needed. Your configuration is saved in their browser locally so they 
-      don't need to touch the Setup tab.
+      Share <strong>sbar_form.html</strong> directly with your supervisors via email, Teams, shared drive, or USB. 
+      They open it in any browser — <strong>no setup, no configuration, no login required.</strong> Everything is pre-configured.
     </p>
-    <div style="margin-top:14px; background:rgba(62,207,142,.06); border:1px solid rgba(62,207,142,.2); border-radius:8px; padding:14px 16px; font-size:13px; color:#a8dfc4;">
-      ✓ Supervisors only see the <strong>Monthly Report</strong> tab<br/>
-      ✓ Dashboard is password protected<br/>
-      ✓ All submissions go to your Google Sheet automatically
+    <div style="margin-top:14px; background:rgba(62,207,142,.06); border:1px solid rgba(62,207,142,.2); border-radius:8px; padding:14px 16px; font-size:13px; color:#a8dfc4; line-height:1.8;">
+      ✓ Supervisors open the file and go straight to the form — zero setup<br/>
+      ✓ Dashboard is password protected — only you can access it<br/>
+      ✓ All submissions go to your Google Sheet automatically<br/>
+      ✓ Works on any computer with a browser and internet connection
     </div>
   </div>
 </div>
@@ -1027,15 +1065,32 @@
 // ══════════════════════════════════════════
 //  CONFIG — loaded from localStorage
 // ══════════════════════════════════════════
-const GEMINI_KEY_DEFAULT = "AIzaSyAFInXABh1-A2DukHxZVfyG2S4URIBII7Y";
+// ── ONLY THE SCRIPT URL IS HARDCODED ─────────────────────────────────────
+// All other config (Gemini key, model, password) lives in Google Sheets
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3Lnep_C8_z9aV11x0IxA9_zzLh0dAWLxBG0MQsPmF4tR0yMgr7A/exec";
 
 function getCfg() {
   return {
-    scriptUrl:   localStorage.getItem('sbar_script_url') || '',
-    geminiKey:   localStorage.getItem('sbar_gemini_key') || GEMINI_KEY_DEFAULT,
+    scriptUrl:   SCRIPT_URL,
+    geminiKey:   localStorage.getItem('sbar_gemini_key')   || '',
     geminiModel: localStorage.getItem('sbar_gemini_model') || 'gemini-1.5-flash',
-    dashPass:    localStorage.getItem('sbar_dash_pass') || 'admin'
+    dashPass:    localStorage.getItem('sbar_dash_pass')    || 'admin'
   };
+}
+
+// Load config from Google Sheet on startup — populates localStorage for this session
+async function loadConfigFromSheet() {
+  try {
+    const r = await fetch(SCRIPT_URL + '?action=getConfig');
+    const d = await r.json();
+    if (d.success && d.config) {
+      if (d.config.geminiKey)   localStorage.setItem('sbar_gemini_key',   d.config.geminiKey);
+      if (d.config.geminiModel) localStorage.setItem('sbar_gemini_model', d.config.geminiModel);
+      if (d.config.dashPass)    localStorage.setItem('sbar_dash_pass',    d.config.dashPass);
+    }
+  } catch(e) {
+    console.warn('Could not load config from Sheet — using cached values.');
+  }
 }
 
 // ══════════════════════════════════════════
@@ -1060,24 +1115,20 @@ function showPage(name) {
 // ══════════════════════════════════════════
 function populateSetupFields() {
   const cfg = getCfg();
-  document.getElementById('setupScriptUrl').value = cfg.scriptUrl;
-  document.getElementById('setupGeminiKey').value = cfg.geminiKey;
-  document.getElementById('setupPassword').value  = cfg.dashPass;
+  const keyEl = document.getElementById('setupGeminiKey');
+  if (keyEl) keyEl.value = cfg.geminiKey || '';
+  document.getElementById('setupPassword').value = cfg.dashPass || '';
   // Auto-load models if key is present
   if (cfg.geminiKey) fetchGeminiModels(cfg.geminiModel);
 }
 
-// Debounce key input to auto-fetch models after typing stops
-let keyInputTimer;
-function onKeyInput() {
-  clearTimeout(keyInputTimer);
-  keyInputTimer = setTimeout(() => fetchGeminiModels(), 900);
-}
+// Key is hardcoded — no input debounce needed
 
 async function fetchGeminiModels(preselectModel) {
-  const key = document.getElementById('setupGeminiKey').value.trim();
+  const inputEl = document.getElementById('setupGeminiKey');
+  const key = (inputEl && inputEl.value.trim()) || getCfg().geminiKey;
   if (!key) {
-    setModelStatus('Enter an API key first.', 'error'); return;
+    setModelStatus('Enter your Gemini API key first.', 'error'); return;
   }
   setModelStatus('Loading available models...', 'info');
   try {
@@ -1124,27 +1175,41 @@ function setModelStatus(msg, type) {
   el.textContent = msg;
 }
 
-function saveSetup() {
-  const url   = document.getElementById('setupScriptUrl').value.trim();
-  const key   = document.getElementById('setupGeminiKey').value.trim();
+async function saveSetup() {
+  const key   = document.getElementById('setupGeminiKey') ? document.getElementById('setupGeminiKey').value.trim() : getCfg().geminiKey;
   const pass  = document.getElementById('setupPassword').value.trim();
   const model = document.getElementById('setupModel').value.trim();
-  if (!url || !key || !pass) {
-    setSetupStatus('Please fill in all fields.', 'error'); return;
+  if (!pass) {
+    setSetupStatus('Please set a dashboard password.', 'error'); return;
   }
-  localStorage.setItem('sbar_script_url', url);
-  localStorage.setItem('sbar_gemini_key', key);
-  localStorage.setItem('sbar_dash_pass', pass);
-  if (model) localStorage.setItem('sbar_gemini_model', model);
-  setSetupStatus(`✓ Configuration saved. Using model: ${model || getCfg().geminiModel}`, 'success');
+  setSetupStatus('Saving to Google Sheets...', 'info');
+  try {
+    const params = new URLSearchParams({
+      action:     'saveConfig',
+      geminiKey:  key || getCfg().geminiKey,
+      geminiModel: model || getCfg().geminiModel,
+      dashPass:   pass
+    });
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode:   'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:   params.toString()
+    });
+    // Also update localStorage immediately
+    if (key)   localStorage.setItem('sbar_gemini_key',   key);
+    if (model) localStorage.setItem('sbar_gemini_model', model);
+    localStorage.setItem('sbar_dash_pass', pass);
+    setSetupStatus('✓ Configuration saved to Google Sheets. All users will receive this config on next load.', 'success');
+  } catch(e) {
+    setSetupStatus('Save failed: ' + e.message, 'error');
+  }
 }
 
 async function testConnection() {
-  const cfg = getCfg();
-  if (!cfg.scriptUrl) { setSetupStatus('Enter your Apps Script URL first.', 'error'); return; }
   setSetupStatus('Testing connection...', 'info');
   try {
-    const r = await fetch(cfg.scriptUrl + '?action=health');
+    const r = await fetch(SCRIPT_URL + '?action=health');
     const d = await r.json();
     if (d.success) setSetupStatus('✓ Connection successful! Apps Script is running.', 'success');
     else setSetupStatus('Connected but got an unexpected response.', 'warn');
@@ -1251,6 +1316,79 @@ function getBulletText(fieldId) {
 // ══════════════════════════════════════════
 //  SECTION UNLOCK
 // ══════════════════════════════════════════
+// ══════════════════════════════════════════
+//  REPORT TYPE
+// ══════════════════════════════════════════
+let currentReportType = 'Monthly';
+
+const typeConfig = {
+  Monthly: {
+    navLabel: 'Monthly SBAR',
+    section: {
+      situation:      { subtitle: 'What are we seeing overall? What is the current operational state?',      placeholder: 'e.g. RX500 line running at 55% OEE for the past 3 months against a 65% target...' },
+      background:     { subtitle: 'What context and history does your manager need?',                        placeholder: 'e.g. Line has historically run at 65% OEE. Issues began in January after supplier change...' },
+      assessment:     { subtitle: 'What do YOU think is driving this trend? Own your analysis.',             placeholder: 'e.g. Tension variance in new material rolls is the primary driver of web walk...' },
+      recommendation: { subtitle: 'What is your plan to address this over time?',                           placeholder: 'e.g. I will request a material tension report from supplier by Friday (owner: me)...' }
+    },
+    coachingTone: 'reflective and trend-focused. Push for patterns over time, historical context, and strategic actions with realistic timelines.',
+    deadlineExpectation: 'weeks or months are acceptable deadlines',
+    scoringNotes: 'timeframe should reference multiple weeks or months. Recommendations can have longer horizons.'
+  },
+  Weekly: {
+    navLabel: 'Weekly SBAR',
+    section: {
+      situation:      { subtitle: 'What happened this week? What is the immediate operational state?',       placeholder: 'e.g. Line 3 ran at 58% OEE this week, down from 63% last week. Three unplanned downtime events...' },
+      background:     { subtitle: 'What context from this week does your manager need?',                     placeholder: 'e.g. We ran a new product this week for the first time. Two operators were out on Monday and Tuesday...' },
+      assessment:     { subtitle: 'What do YOU think caused this week performance? Be specific.',         placeholder: 'e.g. The new product changeover took 45 minutes longer than standard due to setup unfamiliarity...' },
+      recommendation: { subtitle: 'What actions will you take THIS WEEK to address this?',                  placeholder: 'e.g. I will brief the team on the new product setup procedure by tomorrow morning (owner: me)...' }
+    },
+    coachingTone: 'tactical and immediate. Push for specific events this week, what changed day-to-day, and actions due within days not weeks. If they reference months-long trends push them to focus on what changed THIS week.',
+    deadlineExpectation: 'deadlines should be within days — this week or next week at most',
+    scoringNotes: 'timeframe should reference this week or specific days. Recommendations must have near-term deadlines (days). Historical baselines are helpful but not required.'
+  },
+  'Issue Specific': {
+    navLabel: 'Issue Specific SBAR',
+    section: {
+      situation:      { subtitle: 'What is the specific issue or incident? Describe it precisely.',          placeholder: 'e.g. Three consecutive belt breaks occurred on the pull station between 6am-10am on May 21st...' },
+      background:     { subtitle: 'What was happening before this issue occurred? What is the context?',    placeholder: 'e.g. The line had been running normally prior to this. No changes to materials or personnel this week...' },
+      assessment:     { subtitle: 'What do YOU believe caused this specific issue? Be forensic.',           placeholder: 'e.g. The belts that failed were from a new lot received yesterday. Visual inspection shows inconsistent thickness...' },
+      recommendation: { subtitle: 'What corrective actions will you take? Who owns them and by when?',      placeholder: 'e.g. I will quarantine the new belt lot immediately and notify the supplier today (owner: me)...' }
+    },
+    coachingTone: 'investigative and forensic. Push for precise facts — exact time, location, frequency, and mechanism of the issue. Push back on vague language. Every claim should be traceable to a specific observation.',
+    deadlineExpectation: 'deadlines should be immediate — today or within 24-48 hours for containment, days for root cause',
+    scoringNotes: 'timeframe should reference a specific date or incident. Trend data is less important than precise incident description. Recommendations need immediate containment actions.'
+  }
+};
+
+function selectReportType(type) {
+  currentReportType = type;
+  ['monthly','weekly','issue'].forEach(t => {
+    const btn = document.getElementById('type-btn-' + t);
+    if (btn) btn.classList.remove('active');
+  });
+  const keyMap = { 'Monthly':'monthly', 'Weekly':'weekly', 'Issue Specific':'issue' };
+  const btn = document.getElementById('type-btn-' + keyMap[type]);
+  if (btn) btn.classList.add('active');
+
+  // Update nav tab label
+  const tab = document.querySelector('.nav-tab.active');
+  if (tab) tab.textContent = typeConfig[type].navLabel;
+
+  // Update section subtitles and placeholders immediately
+  const cfg = typeConfig[type];
+  ['situation','background','assessment','recommendation'].forEach(id => {
+    const sec = cfg.section[id];
+    // Update subtitle
+    const card = document.getElementById('card-' + id);
+    if (card) {
+      const sub = card.querySelector('.subtitle');
+      if (sub) sub.textContent = sec.subtitle;
+      const input = card.querySelector('#bullet-input-' + id);
+      if (input) input.placeholder = sec.placeholder;
+    }
+  });
+}
+
 function checkIdentityUnlock() {
   const name = document.getElementById('supName').value.trim();
   const line = document.getElementById('supLine').value.trim();
@@ -1842,7 +1980,7 @@ async function generateFullSummary(name, line, sit, bg, assess, rec, key) {
   const recSum  = sectionSummaryCache['recommendation'] || rec;
   const model   = getCfg().geminiModel;
   const prompt = [
-    'You are writing a formal operations report for a senior management audience.',
+    'You are writing a formal ' + currentReportType + ' operations report for a senior management audience.',
     '',
     'Supervisor: ' + name + ' | Line/Department: ' + line,
     '',
@@ -1922,6 +2060,66 @@ function copyFullSummary() {
   });
 }
 
+// ══════════════════════════════════════════
+//  COACHING DEBRIEF (post-submit)
+// ══════════════════════════════════════════
+async function generateCoachingDebrief(name, line, sit, bg, assess, rec, key) {
+  if (!key) return 'Coaching debrief unavailable — no API key configured.';
+  const model = getCfg().geminiModel;
+
+  // Include section ratings from the scoring system
+  const ratings = ['situation','background','assessment','recommendation'].map(id => {
+    const { rating } = scoreSection(id, getBulletText(id));
+    return id.charAt(0).toUpperCase() + id.slice(1) + ': ' + rating;
+  }).join(', ');
+
+  // Include any flagged sections
+  const flagged = (window.flaggedSections && window.flaggedSections.length)
+    ? 'Sections where supervisor hit a knowledge limit and needed an investigation plan: ' + window.flaggedSections.join(', ')
+    : 'No sections flagged as knowledge limits.';
+
+  const prompt = [
+    'You are an operations manager reviewing a ' + currentReportType + ' SBAR report submitted by one of your supervisors.',
+    '',
+    'Supervisor: ' + name + ' | Line: ' + line,
+    '',
+    'SECTION RATINGS (scored by the system):',
+    ratings,
+    '',
+    flagged,
+    '',
+    'WHAT THEY SUBMITTED:',
+    'Situation: ' + sit,
+    'Background: ' + bg,
+    'Assessment: ' + assess,
+    'Recommendation: ' + rec,
+    '',
+    'Write a personal coaching debrief addressed directly to ' + name + '.',
+    'Structure it as:',
+    '1. WHAT YOU DID WELL (2-3 specific things they did well — reference their actual content)',
+    '2. AREAS TO STRENGTHEN (2-3 specific gaps or patterns to work on — be honest but constructive)',
+    '3. FOCUS FOR NEXT MONTH (1-2 concrete things to prioritize improving)',
+    '',
+    'Tone: Direct, honest, supportive — like a good manager giving real feedback.',
+    'Do NOT be vague or generic. Reference what they actually wrote.',
+    'Do NOT repeat the full content back to them.',
+    'If they flagged knowledge gaps, acknowledge that it is okay but push them to close those gaps.',
+    'Keep it under 250 words.'
+  ].join('\n');
+
+  try {
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const d = await res.json();
+    if (d.error) throw new Error(d.error.message);
+    return d.candidates?.[0]?.content?.parts?.[0]?.text || 'Debrief unavailable.';
+  } catch(e) {
+    return 'Could not generate coaching debrief: ' + e.message;
+  }
+}
+
 function toggleExample(fieldId) {
   const box = document.getElementById('example-box-' + fieldId);
   const btn = document.getElementById('example-toggle-' + fieldId);
@@ -1969,12 +2167,15 @@ async function fetchCoaching(fieldId, value) {
 
   const missing     = missingElements[fieldId] || [];
   const contextNote = priorContext ? '\n\nPrior sections already written:\n' + priorContext + '\n\nIMPORTANT: Do NOT ask them to restate info already captured above.' : '';
-  const prompt = 'You are coaching an operations supervisor on the "' + label + '" section of a monthly SBAR report.' +
+  const typeCfg     = typeConfig[currentReportType] || typeConfig['Monthly'];
+  const typeContext  = '\n\nReport type: ' + currentReportType + '. Coaching tone should be ' + typeCfg.coachingTone + ' Note: ' + typeCfg.scoringNotes + ' ' + typeCfg.deadlineExpectation + '.';
+  const prompt = 'You are coaching an operations supervisor on the "' + label + '" section of a ' + currentReportType + ' SBAR report.' +
     '\n\nTheir response:\n' + value +
     '\n\nRating: ' + rating + ' (' + count + ' of ' + total + ' elements). THE RATING IS FINAL — do not change it.' +
     '\n\nCoaching style instruction: ' + toneMap[rating] +
     '\n\nMissing elements not yet detected: ' + missing.join(', ') +
     '\n\n' + coachingExamples[fieldId] +
+    typeContext +
     contextNote +
     '\n\nCRITICAL RULES:\n- Always reference what they actually wrote — never give generic advice\n- Ask questions that logically follow from their specific content\n- If they mention a meeting, ask what the meeting will produce\n- If they mention a cause, ask what evidence supports it\n- If they mention an action, ask who owns it and by when\n- Never repeat the rating label in your message\n- Under 70 words. Write ONLY the coaching message, no preamble.';
 
@@ -2081,11 +2282,10 @@ async function submitForm() {
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  document.getElementById('submitStatus').textContent = 'Generating AI summary...';
+  document.getElementById('submitStatus').textContent = 'Generating coaching debrief...';
 
-  // 1. Get AI summary
-  // Use cached preview summary if available, otherwise generate fresh
-  const aiSummary = window.cachedFullSummary || await generateFullSummary(name, line, sit, bg, assess, rec, cfg.geminiKey);
+  // 1. Get coaching debrief for post-submit
+  const aiSummary = await generateCoachingDebrief(name, line, sit, bg, assess, rec, cfg.geminiKey);
 
   // 2. Save to Google Sheet
   document.getElementById('submitStatus').textContent = 'Saving to Google Sheets...';
@@ -2094,11 +2294,13 @@ async function submitForm() {
     const params = new URLSearchParams({
       supervisorName: name,
       line,
+      reportType: currentReportType,
       situation: sit,
       background: bg,
       assessment: assess,
       recommendation: rec,
       aiSummary,
+      fullSummary: window.cachedFullSummary || '',
       flagged: (window.flaggedSections && window.flaggedSections.length) ? 'Needs investigation: ' + window.flaggedSections.join(', ') : '',
       situationSummary:     sectionSummaryCache['situation']      || '',
       backgroundSummary:    sectionSummaryCache['background']     || '',
@@ -2169,6 +2371,7 @@ function clearForm() {
   document.getElementById('progressFill').style.width = '0%';
   // Reset summaries and IDK state
   Object.keys(sectionSummaryCache).forEach(k => delete sectionSummaryCache[k]);
+  selectReportType('Monthly');
   window.cachedFullSummary = null;
   document.getElementById('full-summary-preview').style.display = 'none';
   ['situation','background','assessment','recommendation'].forEach(id => {
@@ -2234,14 +2437,17 @@ function populateFilters() {
   const names  = [...new Set(allSubmissions.map(s => s.supervisorName).filter(Boolean))].sort();
   const lines  = [...new Set(allSubmissions.map(s => s.line).filter(Boolean))].sort();
   const months = [...new Set(allSubmissions.map(s => s.month).filter(Boolean))];
+  const types  = [...new Set(allSubmissions.map(s => s.reportType).filter(Boolean))].sort();
 
   const nameEl  = document.getElementById('filterName');
   const lineEl  = document.getElementById('filterLine');
   const monthEl = document.getElementById('filterMonth');
+  const typeEl  = document.getElementById('filterType');
 
   nameEl.innerHTML  = '<option value="">All Supervisors</option>' + names.map(n => `<option>${n}</option>`).join('');
   lineEl.innerHTML  = '<option value="">All Lines</option>'       + lines.map(l => `<option>${l}</option>`).join('');
   monthEl.innerHTML = '<option value="">All Months</option>'      + months.map(m => `<option>${m}</option>`).join('');
+  typeEl.innerHTML  = '<option value="">All Types</option>'       + types.map(t => `<option>${t}</option>`).join('');
 }
 
 function updateStats() {
@@ -2257,11 +2463,13 @@ function renderSubmissions() {
   const name   = document.getElementById('filterName').value;
   const line   = document.getElementById('filterLine').value;
   const month  = document.getElementById('filterMonth').value;
+  const type   = document.getElementById('filterType').value;
 
   const filtered = allSubmissions.filter(s => {
     if (name  && s.supervisorName !== name) return false;
     if (line  && s.line !== line)           return false;
     if (month && s.month !== month)         return false;
+    if (type  && s.reportType !== type)     return false;
     if (search) {
       const blob = [s.supervisorName, s.line, s.situation, s.background, s.assessment, s.recommendation, s.aiSummary].join(' ').toLowerCase();
       if (!blob.includes(search)) return false;
@@ -2284,6 +2492,7 @@ function renderSubmissions() {
         </div>
         <div class="sub-meta">
           ${s.flagged ? `<span class="tag" style="background:rgba(247,168,79,.15);color:#f7a84f;" title="${s.flagged}">⚠ Needs Investigation</span>` : ''}
+          ${s.reportType && s.reportType !== 'Monthly' ? `<span class="tag" style="background:rgba(62,207,142,.1);color:#3ecf8e;">${s.reportType}</span>` : ''}
           <span class="tag tag-purple">${s.month || ''}</span>
           <span style="font-size:12px; color:var(--muted);">${s.timestamp || ''}</span>
           <span style="font-size:18px; color:var(--muted); transition:.2s;" id="chevron-${i}">▸</span>
@@ -2328,11 +2537,9 @@ function showToast(msg, type) {
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-window.onload = () => {
-  // Pre-load gemini key if not already saved
-  if (!localStorage.getItem('sbar_gemini_key')) {
-    localStorage.setItem('sbar_gemini_key', GEMINI_KEY_DEFAULT);
-  }
+window.onload = async () => {
+  // Load config from Google Sheet — works for everyone automatically
+  await loadConfigFromSheet();
 };
 </script>
 </body>
