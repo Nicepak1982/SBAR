@@ -659,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v1.0</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.0</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -1280,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v1.0</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.0</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1297,7 +1297,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v1.0";
+const APP_VERSION = "v2.0";
 
 function getCfg() {
   return {
@@ -1429,7 +1429,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v1.0',
+      version:     version || 'v2.0',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -1482,7 +1482,6 @@ function addBullet(fieldId) {
   renderBullets(fieldId);
   syncHidden(fieldId);
   onFieldInput(fieldId);
-  updateChecklist(fieldId);
   input.focus();
 }
 
@@ -1491,7 +1490,7 @@ function removeBullet(fieldId, index) {
   renderBullets(fieldId);
   syncHidden(fieldId);
   onFieldInput(fieldId);
-  updateChecklist(fieldId);
+  if (!bulletData[fieldId].length) resetChecklist(fieldId);
 }
 
 function renderBullets(fieldId) {
@@ -1541,7 +1540,6 @@ function saveEditBullet(fieldId, index) {
   renderBullets(fieldId);
   syncHidden(fieldId);
   onFieldInput(fieldId);
-  updateChecklist(fieldId);
 }
 
 function syncHidden(fieldId) {
@@ -1691,149 +1689,11 @@ function hideCoach(fieldId) {
   document.getElementById('coach-' + fieldId).classList.remove('visible');
 }
 
-// ── CLIENT-SIDE ELEMENT SCORER ───────────────────────────────────────────
-function scoreSection(fieldId, value) {
-  const v = value.toLowerCase();
-  const has = (...terms) => terms.some(t => v.includes(t.toLowerCase()));
-  const hasNumber = (pattern) => pattern.test(value);
-
-  // ── PASS 1: Element presence checks ─────────────────────────────────────
-  const checks = {
-    situation: [
-      has('rx500','rx 500','line 1','line 2','line 3','line 4','line 5','line a','line b','line c') ||
-        (has('line') && hasNumber(/line\s*\d/i)) || has('packaging line','assembly line','press line','extruder'),
-      hasNumber(/\d+\s*%\s*(oee|efficiency)|(oee|efficiency)\s*(of\s*)?\d+\s*%/i),
-      hasNumber(/target\s*(is|of|at|was)?\s*\d+\s*%|\d+\s*%\s*(target|goal)/i),
-      hasNumber(/\d+\s*(day|week|month|quarter|year)s?/i) || has('since january','since february','since march','since april','since may','since june','since july','since august','since september','since october','since november','since december'),
-      has('availability','web walk','film walk','broken hand','downtime') || (has('performance') && has('oee')),
-      hasNumber(/\$[\d,]+|\d+\s*(unit|piece|part)s?\s*(per|a|\/)\s*(day|shift|week)|\d+\s*(lost|missing|short)/)
-    ],
-    background: [
-      hasNumber(/\d+\s*%\s*(oee|efficiency|target|historically|normally|typically|baseline)/i) ||
-        has('historically ran','normally runs','typically runs','used to run','prior to this','baseline of','has been running'),
-      has('since january','since february','since march','since april','since may','since june','started in','began in','started when','began when') ||
-        hasNumber(/\d+\s*(weeks?|months?)\s*ago/i),
-      has('supplier change','new supplier','new operator','new material','new equipment','new process','material change','operator change','equipment change','process change','changeover'),
-      has('overtime','lost units','lost output','$','per day','per week','customer','shipment','behind schedule','capacity'),
-      has('tried','ruled out','investigated','checked','confirmed','verified','tested','pm is current','maintenance is current','no change to','unchanged')
-    ],
-    assessment: [
-      // 1. Hypothesis — broad conversational detection
-      (has('believe','think','hypothesis','suspect','may be','might be','likely','probably','appears to') && has('cause','because','due to','driven by','contributing','result of','related to','failing','issue','problem')) ||
-        has('root cause is','caused by','driven by','due to','resulting in','leads to','not being performed','being performed incorrectly'),
-      // 2. Evidence — conversational AND formal
-      has('data shows','data indicate','we observed','we noticed','we measured','we recorded','we tracked','evidence','operators reported','logs show','numbers show') ||
-        has('now they are','used to take','has changed','went from','taking longer','completing in','running at','dropped to','increased to','decreased','went up','went down','hours now','minutes now','was taking','now taking','used to be','now being','being completed in','hours to'),
-      // 3. Alternative or ruling out — broad
-      has('ruled out','also considered','another possibility','alternative','however','although','not the cause','eliminated','no other','other causes','may also','could also','but that'),
-      // 4. Contributing factors — broad
-      has('contributing','also contributing','secondary','combination','additionally','also playing','compounded','as well','another factor','may also be','could also be','may also contribute'),
-      // 5. Knowledge gap — broad
-      has('unknown','unclear','do not have','no data','not collected','not yet confirmed','still investigating','not yet identified','other causes are','causes are unknown','that is unknown','but that is unknown','not known','is unknown')
-    ],
-    recommendation: [
-      hasNumber(/1\)|2\)|step 1|step 2|\(1\)|\(2\)/i) ||
-        (v.split(/i will|we will|plan to|going to/).length - 1 >= 2),
-      has('i will','assigned to','owner:','responsible:','team lead','supervisor','manager will','engineer will') &&
-        !has('i will monitor','i will watch','i will keep'),
-      hasNumber(/by\s+(monday|tuesday|wednesday|thursday|friday|january|february|march|april|may|june|july|august|september|october|november|december|\d+\/\d+)/i) ||
-        hasNumber(/by\s+(end of|close of)\s+(this|next)?\s*(week|month|day)/i) ||
-        hasNumber(/within\s+\d+\s*(day|week|business day)s?/i),
-      has('root cause','supplier','material','operator training','standard work','process change','equipment','maintenance','rca','investigation'),
-      has('follow up','follow-up','verify','confirm results','check back','review results','report back','measure impact','track progress','validate')
-    ]
-  };
-
-  const elements = checks[fieldId] || [];
-  const count = elements.filter(Boolean).length;
-  const total = elements.length;
-
-  // ── PASS 2: Depth/specificity checks (only when all elements present) ──────
-  const depthChecks = {
-    situation: [
-      // Gap is quantified (e.g. "10 points below", "10% gap")
-      hasNumber(/\d+\s*(point|%)\s*(below|above|gap|short|under|off)/i),
-      // Driver has frequency or rate data (e.g. "4 occurrences per shift", "down 3%")
-      hasNumber(/\d+\s*(occurrence|event|time|instance)s?\s*per\s*(shift|day|week)/i) ||
-        hasNumber(/down\s*\d+\s*%|up\s*\d+\s*%|\d+\s*%\s*(decline|drop|increase|improvement)/i),
-      // Specific timeframe with named month OR "past N months/weeks"
-      has('since january','since february','since march','since april','since may','since june','since july','since august','since september','since october','since november','since december') ||
-        hasNumber(/over\s+(the\s+)?(last|past)\s+\d+|past\s+\d+\s*(day|week|month)/i),
-      // Both units lost AND cost quantified
-      hasNumber(/\d[\d,]*\s*(lost\s+)?(unit|piece|part)s?\s*(per|a|\/)\s*(day|shift)/i) &&
-        hasNumber(/\$[\d,]+/),
-      // Trend direction explicitly stated
-      has('declining','increasing','falling','rising','worsening','trending downward','trending up','down by','dropped','improving','steadily')
-    ],
-    background: [
-      // Baseline has a specific number
-      hasNumber(/\d+\s*%\s*(oee|efficiency|historically|normally|typically|baseline)/i) ||
-        hasNumber(/(historically|normally|typically|used to|prior)\s*(ran?|run|operated?|performed?)\s*at\s*\d+/i),
-      // Start time names a specific month or "N weeks/months ago"
-      has('since january','since february','since march','since april','since may','since june','since july','since august','since september','since october','since november','since december') ||
-        hasNumber(/\d+\s*(weeks?|months?)\s*ago/i),
-      // Change is specific and named
-      has('supplier change','new supplier','material change','new material','operator change','new operator','equipment change','process change','changeover'),
-      // Consequence has a number
-      hasNumber(/\$[\d,]+|\d[\d,]*\s*(unit|piece|part)s?\s*(per|a|\/)\s*(day|shift)/i),
-      // Something specific ruled out or confirmed
-      has('ruled out','confirmed','verified','tested and','pm is current','maintenance is current','no change to','has not changed')
-    ],
-    assessment: [
-      // Hypothesis names a specific mechanism
-      has('tension','variance','wear','friction','alignment','calibration','cycle time','setup time','changeover time','learning curve','fatigue','degradation'),
-      // Evidence has specific data — frequency, observations, logs
-      hasNumber(/\d+\s*(event|occurrence|incident|time|case|instance)s?\s*(per|a|\/)\s*(shift|day|week)/i) ||
-        has('operators reported','logs show','data shows','we measured','we tracked','we recorded','numbers show'),
-      // Named something as ruled out
-      has('ruled out','not the cause','eliminated','confirmed not','maintenance is current','pm is current','has not changed','unchanged'),
-      // Contributing factor is specific and named
-      has('new hire','new operator','new material','new supplier','learning curve','training gap','standard work','setup','changeover'),
-      // Knowledge gap is specific — says what data is missing
-      has('shift-level data','operator-level data','no data on when','have not tracked','have not collected','no formal rca','investigation not started','not yet confirmed')
-    ],
-    recommendation: [
-      // 3 or more distinct actions
-      (v.split(/i will|we will|plan to|going to/).length - 1 >= 3) ||
-        hasNumber(/1\)[\s\S]*2\)[\s\S]*3\)/i),
-      // Owner named on at least one action (role/person + "will" or "by")
-      hasNumber(/(team lead|supervisor|manager|engineer|i)\s+will\s+\w+.*by/i) ||
-        has('owner:','assigned to','responsible:'),
-      // Specific date deadline (named day or month, not just "this week")
-      hasNumber(/by\s+(monday|tuesday|wednesday|thursday|friday|january|february|march|april|may|june|july|august|september|october|november|december|\d+\/\d+)/i),
-      // Actions reference the specific root cause (not just "fix it")
-      has('tension','supplier','material','operator training','standard work','rca','root cause analysis','formal investigation'),
-      // Verification includes a metric or specific review
-      has('review results with','report back to','measure oee','track oee','confirm oee','validate improvement','follow-up on','review findings')
-    ]
-  };
-
-  const depth = depthChecks[fieldId] || [];
-  const depthCount = depth.filter(Boolean).length;
-  const depthTotal = depth.length;
-
-  // ── RATING LOGIC ──────────────────────────────────────────────────────────
-  const missingCount = total - count;
-  let rating;
-
-  // Minimum floor: 3+ bullets = effort shown, cannot score Poor
-  const bulletFloor = (bulletData[fieldId] || []).length >= 3;
-  if      (missingCount >= 3)  rating = bulletFloor ? 'Fair' : 'Poor';
-  else if (missingCount === 2) rating = 'Fair';
-  else if (missingCount === 1) rating = 'Good';
-  else {
-    if   (depthCount >= 4) rating = 'Excellent';
-    else                   rating = 'Great';
-  }
-
-  return { rating, count, total, depthCount, depthTotal };
-}
-
 // ══════════════════════════════════════════
-//  CHECKLIST PANEL — real-time update
+//  CHECKLIST DEFINITIONS (labels only — AI does all evaluation)
 // ══════════════════════════════════════════
 const checklistLabels = {
-  situation:      ['Line or area named','Current OEE / performance % stated','Target % given','Timeframe established','Loss type identified','Business impact quantified'],
+  situation:      ['Line or area named','Current performance / OEE stated','Target or expected level given','Timeframe established','Loss type or issue identified','Business impact stated'],
   background:     ['Historical baseline given','When the issue started','What changed (or confirmed nothing changed)','Consequence / impact stated','Something investigated or ruled out'],
   assessment:     ['Root cause hypothesis stated','Supporting evidence provided','Other causes considered / ruled out','Contributing factors named','Knowledge gaps acknowledged'],
   recommendation: ['Multiple actions listed','Owner assigned to action','Deadline specified','Addresses the root cause','Follow-up / verification planned']
@@ -1847,51 +1707,22 @@ const ratingPillStyle = {
   Excellent: 'background:rgba(62,207,142,.15);color:#3ecf8e;'
 };
 
-function updateChecklist(fieldId) {
-  const value = getBulletText(fieldId);
-  if (!value || value.trim().length < 5) return;
+// Thin shim so IDK logic that calls scoreSection() doesn't crash
+// Returns a neutral result — real scoring is now AI-driven
+function scoreSection(fieldId, value) {
+  const bullets = bulletData[fieldId] || [];
+  const count = Math.min(bullets.length, 3);
+  const total = checklistLabels[fieldId] ? checklistLabels[fieldId].length : 5;
+  return { rating: bullets.length >= 3 ? 'Fair' : 'Poor', count, total, depthCount: 0, depthTotal: 5 };
+}
 
-  const v = value.toLowerCase();
-  const has = (...terms) => terms.some(t => v.includes(t.toLowerCase()));
-  const hasN = p => p.test(value);
-
-  // Mirror the scoreSection checks exactly — one boolean per checklist item
-  const itemChecks = {
-    situation: [
-      has('rx500','rx 500','line 1','line 2','line 3','line 4','line 5','line a','line b','line c') || (has('line') && hasN(/line\s*\d/i)) || has('packaging line','assembly line','press line','extruder'),
-      hasN(/\d+\s*%\s*(oee|efficiency)|(oee|efficiency)\s*(of\s*)?\d+\s*%/i),
-      hasN(/target\s*(is|of|at|was)?\s*\d+\s*%|\d+\s*%\s*(target|goal)/i),
-      hasN(/\d+\s*(day|week|month|quarter|year)s?/i) || has('since january','since february','since march','since april','since may','since june','since july','since august','since september','since october','since november','since december'),
-      has('availability','web walk','film walk','broken hand','downtime') || (has('performance') && has('oee')),
-      hasN(/\$[\d,]+|\d+\s*(unit|piece|part)s?\s*(per|a|\/)\s*(day|shift|week)|\d+\s*(lost|missing|short)/)
-    ],
-    background: [
-      hasN(/\d+\s*%\s*(oee|efficiency|target|historically|normally|typically|baseline)/i) || has('historically ran','normally runs','typically runs','used to run','prior to this','baseline of','has been running'),
-      has('since january','since february','since march','since april','since may','since june','started in','began in','started when','began when') || hasN(/\d+\s*(weeks?|months?)\s*ago/i),
-      has('supplier change','new supplier','new operator','new material','new equipment','new process','material change','operator change','equipment change','process change','changeover','no changes','nothing changed','unchanged','no change'),
-      has('overtime','lost units','lost output','$','per day','per week','customer','shipment','behind schedule','capacity'),
-      has('tried','ruled out','investigated','checked','confirmed','verified','tested','pm is current','maintenance is current','no change to','unchanged')
-    ],
-    assessment: [
-      (has('believe','think','hypothesis','suspect','may be','might be','likely','probably','appears to') && has('cause','because','due to','driven by','contributing','result of','related to','failing','issue','problem')) || has('root cause is','caused by','driven by','due to','resulting in','leads to'),
-      has('data shows','data indicate','we observed','we noticed','we measured','we recorded','we tracked','evidence','operators reported','logs show','numbers show') || has('now they are','used to take','has changed','went from','taking longer','running at','dropped to','increased to'),
-      has('ruled out','also considered','another possibility','alternative','however','although','not the cause','eliminated','no other','other causes','may also','could also','but that'),
-      has('contributing','also contributing','secondary','combination','additionally','also playing','compounded','as well','another factor','may also be','could also be'),
-      has('unknown','unclear','do not have','no data','not collected','not yet confirmed','still investigating','not yet identified','causes are unknown','not known','is unknown','need to investigate','investigation needed')
-    ],
-    recommendation: [
-      hasN(/1\)|2\)|step 1|step 2|\(1\)|\(2\)/i) || (v.split(/i will|we will|plan to|going to/).length - 1 >= 2),
-      has('i will','assigned to','owner:','responsible:','team lead','supervisor','manager will','engineer will','john','kyle','me') && !has('i will monitor','i will watch','i will keep'),
-      hasN(/by\s+(monday|tuesday|wednesday|thursday|friday|january|february|march|april|may|june|july|august|september|october|november|december|\d+\/\d+)/i) || hasN(/by\s+(end of|close of)\s+(this|next)?\s*(week|month|day)/i) || hasN(/within\s+\d+\s*(day|week|business day)s?/i) || has('today','tomorrow','end of day','end of shift','this week','next week'),
-      has('root cause','supplier','material','operator training','standard work','process change','equipment','maintenance','rca','investigation','belt','vendor','procedure'),
-      has('follow up','follow-up','verify','confirm results','check back','review results','report back','measure impact','track progress','validate','update','provide an update','response')
-    ]
-  };
-
-  const items = itemChecks[fieldId] || [];
-  items.forEach((met, i) => {
+// Apply AI checklist result to the DOM
+function applyChecklistResult(fieldId, checkedItems, rating) {
+  const labels = checklistLabels[fieldId] || [];
+  labels.forEach((_, i) => {
     const el = document.getElementById('cl-' + fieldId + '-' + i);
     if (!el) return;
+    const met = Array.isArray(checkedItems) && checkedItems[i] === true;
     if (met) {
       el.classList.add('met');
       el.querySelector('.cl-icon').textContent = '✓';
@@ -1900,14 +1731,176 @@ function updateChecklist(fieldId) {
       el.querySelector('.cl-icon').textContent = '';
     }
   });
-
-  // Update score pill
-  const { rating } = scoreSection(fieldId, value);
   const pill = document.getElementById('cl-score-' + fieldId);
   if (pill && rating) {
     pill.textContent = rating;
     pill.style.cssText = ratingPillStyle[rating] || ratingPillStyle['Fair'];
   }
+}
+
+// Reset checklist to blank for a section
+function resetChecklist(fieldId) {
+  const labels = checklistLabels[fieldId] || [];
+  labels.forEach((_, i) => {
+    const el = document.getElementById('cl-' + fieldId + '-' + i);
+    if (!el) return;
+    el.classList.remove('met');
+    el.querySelector('.cl-icon').textContent = '';
+  });
+  const pill = document.getElementById('cl-score-' + fieldId);
+  if (pill) { pill.textContent = '—'; pill.style.cssText = 'background:var(--surface2);color:var(--muted);'; }
+}
+
+
+
+
+// ══════════════════════════════════════════
+//  UNIFIED AI COACHING + CHECKLIST ENGINE
+// ══════════════════════════════════════════
+async function fetchCoaching(fieldId, value) {
+  const cfg = getCfg();
+  if (!cfg.geminiKey || !cfg.geminiModel) return;
+  showCoachThinking(fieldId);
+
+  const sectionOrder = ['situation','background','assessment','recommendation'];
+  const currentIdx   = sectionOrder.indexOf(fieldId);
+  const priorContext = sectionOrder.slice(0, currentIdx)
+    .filter(id => bulletData[id] && bulletData[id].length)
+    .map(id => id.charAt(0).toUpperCase() + id.slice(1) + ':\n' + getBulletText(id))
+    .join('\n\n');
+
+  const { label } = fieldLabels[fieldId];
+  const typeCfg   = typeConfig[currentReportType] || typeConfig['Monthly'];
+  const labels    = checklistLabels[fieldId] || [];
+  const nextSection = { situation:'Background', background:'Assessment', assessment:'Recommendation', recommendation:null };
+  const checklistStr = labels.map((l, i) => (i+1) + '. ' + l).join('\n');
+  const contextNote = priorContext
+    ? '\n\nPrior sections already written (do NOT ask them to re-state anything captured here):\n' + priorContext
+    : '';
+
+  const prompt =
+`You are evaluating a supervisor's "${label}" section of a ${currentReportType} SBAR report.
+Report context: ${typeCfg.coachingTone}
+
+Their bullets:
+${value}
+${contextNote}
+
+STEP 1 — CHECKLIST
+For each item below, decide if the supervisor's bullets clearly address it.
+Use plain language understanding — not keyword matching.
+A supervisor saying "10 of our 30 operators are new hires brought on 3 months ago" clearly establishes BOTH when something started AND what changed.
+Be reasonable and generous — partial or implied answers count if the meaning is clear.
+
+${checklistStr}
+
+STEP 2 — RATING
+Count how many checklist items are true (call this N out of ${labels.length}).
+0-1 true = Poor | 2 true = Fair | 3 true = Good | 4 true = Great | 5+ true = Excellent
+
+STEP 3 — COACHING MESSAGE
+Write a coaching message under 65 words that:
+- References what they actually wrote — never give generic advice
+- Poor/Fair: asks ONE sharp follow-up question about the most important unchecked item
+- Good: one specific improvement suggestion, then say "Ready to move to ${nextSection[fieldId] || 'submit'}"
+- Great/Excellent: affirm what is strong, say "Move on to ${nextSection[fieldId] || 'submit'}"
+- Never repeat the rating word in the message body
+
+RESPOND IN EXACTLY THIS FORMAT — nothing before or after:
+CHECKLIST: [true/false, true/false, true/false, ...]
+RATING: Poor
+COACHING: your message here`;
+
+  try {
+    const res  = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+
+    // Parse structured response
+    const checklistMatch = raw.match(/CHECKLIST:\s*\[([^\]]+)\]/i);
+    const ratingMatch    = raw.match(/RATING:\s*(Poor|Fair|Good|Great|Excellent)/i);
+    const coachingMatch  = raw.match(/COACHING:\s*([\s\S]+)/i);
+
+    const rating     = ratingMatch   ? ratingMatch[1].trim()   : 'Fair';
+    const coachText  = coachingMatch ? coachingMatch[1].trim() : raw;
+    const checkedItems = checklistMatch
+      ? checklistMatch[1].split(',').map(s => s.trim().toLowerCase() === 'true')
+      : labels.map(() => false);
+
+    // Update checklist panel with AI result
+    applyChecklistResult(fieldId, checkedItems, rating);
+
+    // Render coaching box
+    const ratingColors = {
+      Poor:      { bg:'rgba(247,95,95,.12)',  border:'rgba(247,95,95,.35)',  text:'#f75f5f' },
+      Fair:      { bg:'rgba(247,168,79,.10)', border:'rgba(247,168,79,.35)', text:'#f7a84f' },
+      Good:      { bg:'rgba(79,142,247,.10)', border:'rgba(79,142,247,.35)', text:'#4f8ef7' },
+      Great:     { bg:'rgba(62,207,142,.10)', border:'rgba(62,207,142,.35)', text:'#3ecf8e' },
+      Excellent: { bg:'rgba(62,207,142,.15)', border:'rgba(62,207,142,.5)',  text:'#3ecf8e' }
+    };
+    const rc   = ratingColors[rating] || ratingColors.Fair;
+    const icon = rating === 'Poor' ? '⚠ ' : rating === 'Fair' ? '◑ ' : rating === 'Good' ? '✓ ' : '✦ ';
+    const box  = document.getElementById('coach-' + fieldId);
+    box.style.background  = rc.bg;
+    box.style.borderColor = rc.border;
+    box.querySelector('.ai-text').innerHTML =
+      '<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:' + rc.bg + ';border:1px solid ' + rc.border + ';color:' + rc.text + ';margin-bottom:8px;">' + icon + rating + '</span><br/>' + coachText;
+
+    // Unlock next section on Good or better
+    const passingRatings = ['Good','Great','Excellent'];
+    if (passingRatings.includes(rating)) {
+      generateSectionSummary(fieldId);
+      const unlockMap = { situation:'background', background:'assessment', assessment:'recommendation', recommendation:null };
+      const nextId = unlockMap[fieldId];
+      if (nextId) {
+        setTimeout(() => {
+          document.getElementById('card-' + nextId).style.display = 'block';
+          const sc = document.getElementById('summary-card-' + fieldId);
+          if (sc) sc.scrollIntoView({ behavior:'smooth', block:'start' });
+        }, 300);
+      }
+      if (fieldId === 'recommendation') {
+        document.getElementById('submit-row').style.display = 'flex';
+        showFullSummaryPreview();
+      }
+    }
+
+    fetchExample(fieldId, label, cfg);
+
+  } catch(e) {
+    const box = document.getElementById('coach-' + fieldId);
+    if (box) {
+      box.classList.add('visible');
+      box.querySelector('.ai-text').innerHTML = '<span style="color:var(--danger)">AI error: ' + e.message + '</span>';
+    }
+  }
+}
+
+async function fetchExample(fieldId, label, cfg) {
+  const industries = ['a hospital nurse station','a restaurant kitchen','a retail warehouse','a hotel front desk','a construction site','a call center','a school cafeteria','a delivery logistics hub'];
+  const industry   = industries[Math.floor(Math.random() * industries.length)];
+  const prompt     = 'Write a realistic example of a well-written "' + label + '" section of an SBAR report from ' + industry + '. Use 2-4 bullet points starting with bullet character, specific with real numbers. Do NOT mention manufacturing or OEE. No intro text, just the bullets.';
+  try {
+    const res  = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (text) {
+      document.getElementById('example-text-' + fieldId).innerHTML = text.replace(/\n/g, '<br/>');
+      const btn = document.getElementById('example-toggle-' + fieldId);
+      if (btn) { btn.style.display = 'inline-flex'; btn.textContent = '▸ See an example'; }
+      const exBox = document.getElementById('example-box-' + fieldId);
+      if (exBox) exBox.classList.remove('open');
+    }
+  } catch(e) { /* silent */ }
 }
 
 // ══════════════════════════════════════════
@@ -2474,7 +2467,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v1.0';
+  badge.textContent = version || 'v2.0';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
@@ -2511,135 +2504,6 @@ function toggleExample(fieldId) {
   const btn = document.getElementById('example-toggle-' + fieldId);
   const open = box.classList.toggle('open');
   btn.textContent = (open ? '▾' : '▸') + ' See an example';
-}
-
-async function fetchCoaching(fieldId, value) {
-  const cfg = getCfg();
-  if (!cfg.geminiKey || !cfg.geminiModel) return;
-  showCoachThinking(fieldId);
-
-  // Build prior context
-  const sectionOrder = ['situation','background','assessment','recommendation'];
-  const currentIdx   = sectionOrder.indexOf(fieldId);
-  const priorContext = sectionOrder.slice(0, currentIdx)
-    .filter(id => bulletData[id] && bulletData[id].length)
-    .map(id => id.charAt(0).toUpperCase() + id.slice(1) + ':\n' + getBulletText(id))
-    .join('\n\n');
-
-  const { label } = fieldLabels[fieldId];
-  const { rating, count, total } = scoreSection(fieldId, value);
-
-  const nextSection = { situation:'Background', background:'Assessment', assessment:'Recommendation', recommendation:null };
-  const missingElements = {
-    situation:      ['specific line or machine named','exact metric with number','target stated with number','how long this has been happening','which pillar is driving the gap','business impact quantified'],
-    background:     ['historical baseline or normal performance','when the problem started','recent changes to people materials or equipment','why this matters if unresolved','what has been tried or ruled out'],
-    assessment:     ['specific root cause hypothesis','evidence or data supporting hypothesis','alternative causes considered','contributing factors','knowledge gaps acknowledged'],
-    recommendation: ['at least 2 specific actions','owner for each action','deadline for each action','addresses root cause','follow-up or verification step']
-  };
-  const toneMap = {
-    Poor:      'Acknowledge what they have written specifically — name it. Then identify the single most important next step based on what they wrote and ask one sharp, specific follow-up question about it. Example style: "You have identified X — good start. But what about Y? Specifically, [question]." Never be dismissive.',
-    Fair:      'Acknowledge what is good about what they wrote specifically. Then push on the 1-2 most important gaps with a specific follow-up question tied directly to what they said. Example style: "You mention [X] — that is helpful. Now push further: [specific question about their actual content]."',
-    Good:      'Briefly affirm what makes this solid. Give one specific suggestion tied to what they actually wrote to make it stronger. End with: "You are ready to move to ' + (nextSection[fieldId] || 'submitting') + '."',
-    Great:     'Affirm in one sentence what specifically makes this strong. Say "Move on to ' + (nextSection[fieldId] || 'submitting') + ' — you are done here." No questions.',
-    Excellent: 'Affirm in one sentence. Say "Excellent — move on to ' + (nextSection[fieldId] || 'submitting') + '." No questions.'
-  };
-
-  const coachingExamples = {
-    situation: 'Example good coaching: "You identified the line and OEE — solid. Now push further: what specific loss category is driving the gap? Is it availability, performance, or quality? Name it and quantify it."',
-    background: 'Example good coaching: "You noted the problem started in January — good. But what specifically changed in January? A supplier, a process, a person? The more specific you are, the more useful your background becomes."',
-    assessment: 'Example good coaching: "A meeting is a good first step but it is not an investigation plan. What will you do IN the meeting? What data will you bring? Who needs to attend and what decision or finding do you need to walk out with?"',
-    recommendation: 'Example good coaching: "You have an action — good. But who specifically owns it? What does done look like? Give it a deadline and define the outcome you expect, not just the task."'
-  };
-
-  const missing     = missingElements[fieldId] || [];
-  const contextNote = priorContext ? '\n\nPrior sections already written:\n' + priorContext + '\n\nIMPORTANT: Do NOT ask them to restate info already captured above.' : '';
-  const typeCfg     = typeConfig[currentReportType] || typeConfig['Monthly'];
-  const typeContext  = '\n\nReport type: ' + currentReportType + '. Coaching tone should be ' + typeCfg.coachingTone + ' Note: ' + typeCfg.scoringNotes + ' ' + typeCfg.deadlineExpectation + '.';
-  const prompt = 'You are coaching an operations supervisor on the "' + label + '" section of a ' + currentReportType + ' SBAR report.' +
-    '\n\nTheir response:\n' + value +
-    '\n\nRating: ' + rating + ' (' + count + ' of ' + total + ' elements). THE RATING IS FINAL — do not change it.' +
-    '\n\nCoaching style instruction: ' + toneMap[rating] +
-    '\n\nMissing elements not yet detected: ' + missing.join(', ') +
-    '\n\n' + coachingExamples[fieldId] +
-    typeContext +
-    contextNote +
-    '\n\nCRITICAL RULES:\n- Always reference what they actually wrote — never give generic advice\n- Ask questions that logically follow from their specific content\n- If they mention a meeting, ask what the meeting will produce\n- If they mention a cause, ask what evidence supports it\n- If they mention an action, ask who owns it and by when\n- Never repeat the rating label in your message\n- Under 70 words. Write ONLY the coaching message, no preamble.';
-
-  try {
-    const res  = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    const coachText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-    const ratingColors = {
-      Poor:      { bg:'rgba(247,95,95,.12)',  border:'rgba(247,95,95,.35)',  text:'#f75f5f' },
-      Fair:      { bg:'rgba(247,168,79,.10)', border:'rgba(247,168,79,.35)', text:'#f7a84f' },
-      Good:      { bg:'rgba(79,142,247,.10)', border:'rgba(79,142,247,.35)', text:'#4f8ef7' },
-      Great:     { bg:'rgba(62,207,142,.10)', border:'rgba(62,207,142,.35)', text:'#3ecf8e' },
-      Excellent: { bg:'rgba(62,207,142,.15)', border:'rgba(62,207,142,.5)',  text:'#3ecf8e' }
-    };
-    const rc   = ratingColors[rating] || ratingColors.Fair;
-    const icon = rating === 'Poor' ? '⚠ ' : rating === 'Fair' ? '◑ ' : rating === 'Good' ? '✓ ' : '✦ ';
-    const box  = document.getElementById('coach-' + fieldId);
-    box.style.background  = rc.bg;
-    box.style.borderColor = rc.border;
-    box.querySelector('.ai-text').innerHTML = '<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:' + rc.bg + ';border:1px solid ' + rc.border + ';color:' + rc.text + ';margin-bottom:8px;">' + icon + rating + '</span><br/>' + coachText;
-
-    // Unlock next section if Good or better
-    const passingRatings = ['Good','Great','Excellent'];
-    if (passingRatings.includes(rating)) {
-      generateSectionSummary(fieldId);
-      const unlockMap = { situation:'background', background:'assessment', assessment:'recommendation', recommendation:null };
-      const nextId = unlockMap[fieldId];
-      if (nextId) {
-        setTimeout(() => {
-          document.getElementById('card-' + nextId).style.display = 'block';
-          const sc = document.getElementById('summary-card-' + fieldId);
-          if (sc) sc.scrollIntoView({ behavior:'smooth', block:'start' });
-        }, 300);
-      }
-      if (fieldId === 'recommendation') {
-        document.getElementById('submit-row').style.display = 'flex';
-        showFullSummaryPreview();
-      }
-    }
-
-    // Fetch example separately — failure won't affect coaching
-    fetchExample(fieldId, label, cfg);
-
-  } catch(e) {
-    const box = document.getElementById('coach-' + fieldId);
-    if (box) {
-      box.classList.add('visible');
-      box.querySelector('.ai-text').innerHTML = '<span style="color:var(--danger)">AI error: ' + e.message + '</span>';
-    }
-  }
-}
-
-async function fetchExample(fieldId, label, cfg) {
-  const industries = ['a hospital nurse station','a restaurant kitchen','a retail warehouse','a hotel front desk','a construction site','a call center','a school cafeteria','a delivery logistics hub'];
-  const industry   = industries[Math.floor(Math.random() * industries.length)];
-  const prompt     = 'Write a realistic example of a well-written "' + label + '" section of an SBAR report from ' + industry + '. Use 2-4 bullet points starting with bullet character, specific with real numbers. Do NOT mention manufacturing or OEE. No intro text, just the bullets.';
-  try {
-    const res  = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (text) {
-      document.getElementById('example-text-' + fieldId).innerHTML = text.replace(/\n/g, '<br/>');
-      const btn = document.getElementById('example-toggle-' + fieldId);
-      if (btn) { btn.style.display = 'inline-flex'; btn.textContent = '▸ See an example'; }
-      const exBox = document.getElementById('example-box-' + fieldId);
-      if (exBox) exBox.classList.remove('open');
-    }
-  } catch(e) { /* example failure is silent */ }
 }
 
 // ══════════════════════════════════════════
@@ -2751,14 +2615,7 @@ function clearForm() {
     document.getElementById('bullet-input-' + id).value = '';
     hideCoach(id);
     document.getElementById('card-' + id).style.display = 'none';
-    // Reset checklist
-    const pill = document.getElementById('cl-score-' + id);
-    if (pill) { pill.textContent = '—'; pill.style.cssText = 'background:var(--surface2);color:var(--muted);'; }
-    const labels = checklistLabels[id] || [];
-    labels.forEach((_, i) => {
-      const el = document.getElementById('cl-' + id + '-' + i);
-      if (el) { el.classList.remove('met'); el.querySelector('.cl-icon').textContent = ''; }
-    });
+    resetChecklist(id);
   });
   document.getElementById('submit-row').style.display = 'none';
   document.getElementById('summaryCard').classList.remove('visible');
