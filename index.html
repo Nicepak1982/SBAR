@@ -659,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.1</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.2</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -1280,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.1</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.2</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1297,7 +1297,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v2.1";
+const APP_VERSION = "v2.2";
 
 function getCfg() {
   return {
@@ -1429,7 +1429,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v2.1',
+      version:     version || 'v2.2',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -1829,16 +1829,21 @@ COACHING: your message here`;
     if (data.error) throw new Error(data.error.message);
     const raw = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
 
-    // Parse structured response
-    const checklistMatch = raw.match(/CHECKLIST:\s*\[([^\]]+)\]/i);
-    const ratingMatch    = raw.match(/RATING:\s*(Poor|Fair|Good|Great|Excellent)/i);
-    const coachingMatch  = raw.match(/COACHING:\s*([\s\S]+)/i);
+    // Parse structured response — handle Gemini formatting variations
+    const ratingMatch   = raw.match(/RATING:\s*(Poor|Fair|Good|Great|Excellent)/i);
+    const coachingMatch = raw.match(/COACHING:\s*([\s\S]+)/i);
 
-    const rating     = ratingMatch   ? ratingMatch[1].trim()   : 'Fair';
-    const coachText  = coachingMatch ? coachingMatch[1].trim() : raw;
-    const checkedItems = checklistMatch
-      ? checklistMatch[1].split(',').map(s => s.trim().toLowerCase() === 'true')
-      : labels.map(() => false);
+    const rating    = ratingMatch   ? ratingMatch[1].trim()   : 'Fair';
+    const coachText = coachingMatch ? coachingMatch[1].trim() : raw;
+
+    // Robust checklist parse — handles brackets, newlines, numbered lists, etc.
+    let checkedItems = labels.map(() => false);
+    const clMatch = raw.match(/CHECKLIST:\s*([\s\S]+?)(?=\nRATING:|$)/i);
+    if (clMatch) {
+      // Extract all true/false tokens from the checklist block
+      const tokens = clMatch[1].match(/\b(true|false)\b/gi) || [];
+      checkedItems = labels.map((_, i) => (tokens[i] || '').toLowerCase() === 'true');
+    }
 
     // Store result so it survives section unlocks and DOM re-renders
     checklistState[fieldId] = { checkedItems, rating };
@@ -2483,7 +2488,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v2.1';
+  badge.textContent = version || 'v2.2';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
