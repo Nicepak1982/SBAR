@@ -659,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.2</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.4</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -1280,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.2</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.4</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1297,7 +1297,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v2.2";
+const APP_VERSION = "v2.4";
 
 function getCfg() {
   return {
@@ -1429,7 +1429,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v2.2',
+      version:     version || 'v2.4',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -1782,9 +1782,31 @@ async function fetchCoaching(fieldId, value) {
     ? '\n\nPrior sections already written (do NOT ask them to re-state anything captured here):\n' + priorContext
     : '';
 
+  // Section-specific ops manager coaching tone
+  const sectionCoachingTone = {
+    situation: 'Push for specifics: exact line, exact metric, exact timeframe, exact business impact. No numbers = not specific enough.',
+    background: 'Push for context: what was normal before, when it changed, what specifically changed, and what the consequence is if it stays unresolved.',
+    assessment: `Think like a seasoned operations manager reviewing this analysis.
+CRITICAL MINDSET: Operations is about pulling the levers you have, not lamenting the ones you don't.
+- If the root cause is something outside their control (people left, customer changed, machine aged), do NOT ask why it happened — that ship has sailed.
+- Instead push them: given this root cause, what actions are available RIGHT NOW? Who can train the 10 people? Can training be accelerated? Can experienced operators from another line temporarily help? What is the realistic timeline?
+- Push for evidence that supports their hypothesis — what observations, data, or conversations back this up?
+- Push for contributing factors they may have missed.
+- If they've done a solid 5-Why, acknowledge it and push them toward what they're going to DO about the root cause — that's what belongs in Recommendation.`,
+    recommendation: `Think like an operations manager approving an action plan.
+- Every action needs an owner and a deadline. "We will" is not an owner — a name or role is.
+- Actions should address the actual root cause identified in Assessment, not just the symptom.
+- Push for immediate containment (what happens TODAY) AND the fix (what resolves it for good).
+- If the root cause is a staffing/training gap, push: who specifically is doing the training, what is the schedule, and what is the measurable milestone that confirms the 10 people are competent?
+- Verify the plan closes the loop: how will they know it worked?`
+  };
+
   const prompt =
-`You are evaluating a supervisor's "${label}" section of a ${currentReportType} SBAR report.
-Report context: ${typeCfg.coachingTone}
+`You are coaching a supervisor on the "${label}" section of a ${currentReportType} SBAR report.
+Report type context: ${typeCfg.coachingTone}
+
+COACHING MINDSET FOR THIS SECTION:
+${sectionCoachingTone[fieldId] || ''}
 
 Their bullets:
 ${value}
@@ -1806,11 +1828,13 @@ Count how many checklist items are true (call this N out of ${labels.length}).
 0-2 true = Poor | 3 true = Fair | 4 true = Good | 5 true = Great | ${labels.length} true = Excellent
 
 STEP 3 — COACHING MESSAGE
-Write a direct, specific coaching message under 70 words:
-- Always name what they wrote — never give generic advice
-- Poor/Fair: Be direct. Name the 1-2 most important missing items and ask a sharp question that forces them to go find the specific answer. Push them — if they haven't quantified the impact, ask "What is the actual dollar or unit cost per shift?"
-- Good: Name one specific gap still present, push on it, then say "Ready to move to ${nextSection[fieldId] || 'submit'}"
-- Great/Excellent: Affirm specifically what makes it strong. Say "Move on to ${nextSection[fieldId] || 'submit'}"
+Write a direct, forward-focused coaching message under 70 words:
+- Always reference what they actually wrote — never give generic advice
+- Think like an ops manager: focus on what CAN be done, not what went wrong
+- Poor/Fair: Name the most important gap and ask one sharp forward-focused question
+- Good: Name one improvement still needed, then say "Ready to move to ${nextSection[fieldId] || 'submit'}"
+- Great/Excellent: Affirm what makes it strong. Say "Move on to ${nextSection[fieldId] || 'submit'}"
+- Do NOT ask why something outside their control happened (people leaving, customers changing, equipment aging) — push instead on what they will DO about it
 - Do NOT say "great start", "good start", or "solid" unless the rating is Great/Excellent
 - Never repeat the rating word in the message body
 
@@ -2032,19 +2056,21 @@ async function validateIdkIntent(fieldId) {
     .map(id => id.charAt(0).toUpperCase() + id.slice(1) + ':\n' + getBulletText(id))
     .join('\n\n');
 
-  const fullPrompt = 'A supervisor is filling out the "' + sectionLabels[fieldId] + '" section of a ' + currentReportType + ' SBAR report and checked "I have exhausted what I know."' +
-    '\n\n' + (idkPriorContext ? 'Prior sections:\n' + idkPriorContext + '\n\n' : '') +
+  const fullPrompt = 'You are an experienced operations manager reviewing a supervisor\'s SBAR report. The supervisor filled out the "' + sectionLabels[fieldId] + '" section and checked "I have exhausted what I know."\n\n' +
+    (idkPriorContext ? 'Prior sections:\n' + idkPriorContext + '\n\n' : '') +
     'Current section content:\n' + getBulletText(fieldId) +
+    '\n\nOPS MANAGER MINDSET: You are not an investigator looking for blame. You are asking: does this supervisor know enough to move forward, or are there facts they should already have at their fingertips as the person running this operation? ' +
+    'If the root cause involves something outside their control (people leaving, equipment aging, customers changing), do NOT push them to explain why it happened — push them to address what is within their control.' +
     '\n\nYour job: Make ONE of four determinations:' +
-    '\n1. PUSHBACK — They have NOT exhausted what they know. They have obvious gaps a supervisor at their level should be able to answer. Tell them specifically what to add.' +
-    '\n2. GENUINE — They truly do not know something and need an investigation plan. They have acknowledged specific unknowns or gaps.' +
-    '\n3. REDIRECT — They actually know enough to move forward. They have explained the situation/constraint clearly and do NOT need investigation — they need to move to ' + nextName + ' instead.' +
-    '\n4. ESCALATE — They have indicated this is outside their scope, not their department, or owned by someone else. This is a valid boundary.' +
+    '\n1. PUSHBACK — They have NOT exhausted what they know. There are facts a supervisor running this operation should be able to answer right now. Be specific about exactly what they should add — name the gap directly.' +
+    '\n2. GENUINE — They truly do not know something that matters, and they need an investigation plan to close the gap. They have identified a real unknown.' +
+    '\n3. REDIRECT — They actually know enough. They have captured the key facts and do NOT need an investigation plan — they should move directly to ' + nextName + '.' +
+    '\n4. ESCALATE — This is legitimately outside their scope or authority. Validate it and tell them their investigation plan should name who owns it and by when they will have an answer.' +
     '\n\nRespond with ONLY one of these (no extra text):' +
-    '\nPUSHBACK: [one specific sentence naming what is still missing]' +
-    '\nGENUINE: [one sentence confirming they can proceed to their investigation plan]' +
-    '\nREDIRECT: [one sentence telling them they have documented this section well and should move to ' + nextName + ' — be specific about what they captured well]' +
-    '\nESCALATE: [one sentence affirming this is outside their scope and telling them their investigation plan should name who owns it and by when they will get an answer]';
+    '\nPUSHBACK: [one direct sentence naming the specific gap they should be able to fill right now]' +
+    '\nGENUINE: [one sentence acknowledging the real gap and confirming they can proceed to their investigation plan]' +
+    '\nREDIRECT: [one sentence confirming they have what they need and directing them to ' + nextName + ' — name specifically what they captured well]' +
+    '\nESCALATE: [one sentence validating the boundary and telling them to document who owns it and by when in their plan]';
 
   try {
     const cfg2 = getCfg();
@@ -2136,85 +2162,83 @@ async function fetchIdkCoaching(fieldId) {
   const cfg = getCfg();
   if (!cfg.geminiKey) return;
 
-  const bullets  = idkBulletData[fieldId];
+  const bullets = idkBulletData[fieldId];
   if (!bullets.length) return;
 
-  // FIX 1: Filter out meta-comment bullets before scoring
+  // Strip meta-comment bullets before sending to AI
   const metaPatterns = [/^this (has|was|is) already (been )?stated/i, /^(see above|already mentioned|same as above|covered above|noted above)/i, /^n\/a/i];
   const actionBullets = bullets.filter(b => !metaPatterns.some(p => p.test(b.trim())));
-  const scoringBullets = actionBullets.length ? actionBullets : bullets; // fall back to all if everything filtered
-  const value    = scoringBullets.map(b => '• ' + b).join('\n');
-  const fullValue = bullets.map(b => '• ' + b).join('\n'); // send full text to AI so it has context
-  const box      = document.getElementById('idk-coach-' + fieldId);
+  const planText = (actionBullets.length ? actionBullets : bullets).map(b => '• ' + b).join('\n');
+
+  const box = document.getElementById('idk-coach-' + fieldId);
   box.classList.add('visible');
   box.querySelector('.ai-text').innerHTML = '<span class="ai-thinking">Evaluating your investigation plan...</span>';
 
-  // Score the investigation plan strictly as a Recommendation-style action plan
-  const v  = value.toLowerCase();
-  const has  = (...t) => t.some(x => v.includes(x.toLowerCase()));
-  const hasN = p => p.test(value);
-
-  const planChecks = [
-    // 1. At least one concrete action — broad catch including named-person delegation
-    hasN(/1\)|2\)|step 1|step 2/i) ||
-      (v.split(/i will|we will|plan to|going to|will hold|will schedule|will meet|will check|will contact|will review|will investigate|will follow|is contacting|is reviewing|will provide/).length - 1 >= 1),
-    // 2. Owner identified — "I will", named person + "will/is", or explicit owner tag
-    has('i will','we will','assigned to','owner:','responsible:') ||
-      hasN(/(john|kyle|sarah|mike|tom|manager|supervisor|engineer|team lead|maintenance|quality)\s+(will|is|has been|to)\b/i),
-    // 3. Deadline — named day, "end of day", "by [date]", or relative time
-    hasN(/by\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december|\d+\/\d+)/i) ||
-      hasN(/by\s+(end of|close of)\s*(this|next|the)?\s*(week|month|day|shift)/i) ||
-      hasN(/within\s+\d+\s*(day|hour|week|business day)s?/i) ||
-      has('end of day','end of shift','this week','next week','tomorrow','today','by friday','by monday','by wednesday','by thursday','by tuesday'),
-    // 4. Investigation or data activity — including "contacting", "checking", "reviewing"
-    has('data','log','track','measure','investigate','inspect','test','analyze','collect','review','check','meeting','discuss','walk','observe','contact','contacting','calling','checking','speaking','asking','pull','gather'),
-    // 5. Expected output or follow-up
-    has('report','share','follow up','present','update','feedback','findings','decision','determine','identify','resolve','outcome','response','provide','response by','report back','let me know','advise')
-  ];
-  const planCount   = planChecks.filter(Boolean).length;
-  const planMissing = 5 - planCount;
-  let planRating;
-  if      (planMissing >= 3) planRating = 'Poor';
-  else if (planMissing === 2) planRating = 'Fair';
-  else if (planMissing === 1) planRating = 'Good';
-  else                        planRating = 'Excellent';
-
-  const toneMap = {
-    Poor:      'Acknowledge what they have specifically — if they mention a meeting or person, push on what it will PRODUCE. Ask: what data will be reviewed, and what decision comes out of it. Never say "vague" — ask the specific follow-up question instead.',
-    Fair:      'Acknowledge what is good. Name the one specific gap — missing owner, missing deadline, or missing outcome — and ask one direct question about their actual content to fill it.',
-    Good:      'Affirm what makes this a solid plan. Give one specific suggestion tied to what they wrote. Tell them they are ready to proceed.',
-    Excellent: 'Affirm this is a strong investigation plan. Tell them they can move forward.'
+  const sectionContext = {
+    situation:  'They need to find out facts about what is currently happening — specific data, measurements, or observations they do not yet have.',
+    background: 'They need to find out context — what changed, who has records, what the history looks like.',
+    assessment: 'They need to close a gap in their root cause analysis — what evidence is missing, what needs to be confirmed, what alternative causes need to be ruled out.'
   };
 
-  const prompt = 'A supervisor is providing an investigation plan for the "' + fieldId + '" section of their SBAR report.' +
-    '\n\nTheir plan:\n' + fullValue +
-    '\n\nPlan scored: ' + planRating + ' (' + planCount + '/5 elements). THE RATING IS FINAL — do not re-evaluate it.' +
-    '\n\nCoaching style: ' + toneMap[planRating] +
-    '\n\nCRITICAL RULES:\n- Always reference what they actually wrote\n- Ignore any meta-comment bullets like "this has already been stated above" — focus only on the actionable items\n- A named person (e.g. "John is contacting the supplier by end of day") counts as a valid owner + action\n- If they mention an action with a deadline, that is good — affirm it\n- Never use the word "vague" — ask the specific follow-up question instead\n- Under 60 words. Just the coaching message, no preamble.';
+  const prompt =
+`You are an experienced operations manager reviewing a supervisor's investigation plan for the "${fieldId}" section of their SBAR report.
+
+Their investigation plan:
+${planText}
+
+Section context: ${sectionContext[fieldId] || ''}
+
+OPS MANAGER MINDSET:
+- A good investigation plan is not a list of meetings. It is a list of specific actions with owners and deadlines that will produce a named piece of information or decision.
+- Every action needs: WHO will do it, WHAT specifically they will do or find out, and BY WHEN.
+- If the root cause involves something outside their control (people leaving, equipment breaking, customers changing), the plan should focus on what CAN be done — not on explaining why it happened.
+- Push them toward actions that will result in a clear answer they can communicate to their manager.
+
+Evaluate this plan and respond with:
+RATING: [Poor / Fair / Good / Excellent]
+COACHING: [under 65 words — direct, specific, ops-manager tone]
+
+Rating guide:
+- Poor: Missing owner, deadline, AND specific outcome — just intentions, no plan
+- Fair: Has some elements but missing one or two critical pieces
+- Good: Has owner, deadline, and specific outcome — may need one refinement
+- Excellent: Complete, actionable, specific — ready to execute
+
+Coaching guide:
+- Poor/Fair: Name exactly what is missing. Ask one direct question — e.g. "Who specifically is doing this, and what is the deadline?" Push for actions, not explanations.
+- Good: Affirm what makes it actionable, give one specific sharpening suggestion, tell them they are ready to proceed.
+- Excellent: Affirm it is a strong plan. Tell them to move forward.
+- Never ask why something happened if it is already explained. Focus on what they WILL DO.`;
 
   try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`, {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
     const d = await r.json();
-    const coachText = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const raw = (d.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+
+    const ratingMatch   = raw.match(/RATING:\s*(Poor|Fair|Good|Excellent)/i);
+    const coachingMatch = raw.match(/COACHING:\s*([\s\S]+)/i);
+    const planRating = ratingMatch  ? ratingMatch[1].trim()   : 'Fair';
+    const coachText  = coachingMatch ? coachingMatch[1].trim() : raw;
 
     const ratingColors = {
       Poor:      { bg: 'rgba(247,95,95,.12)',  border: 'rgba(247,95,95,.35)',  text: '#f75f5f' },
       Fair:      { bg: 'rgba(247,168,79,.10)', border: 'rgba(247,168,79,.35)', text: '#f7a84f' },
       Good:      { bg: 'rgba(79,142,247,.10)', border: 'rgba(79,142,247,.35)', text: '#4f8ef7' },
-      Excellent: { bg: 'rgba(62,207,142,.15)', border: 'rgba(62,207,142,.5)',  text: '#3ecf8e' },
+      Excellent: { bg: 'rgba(62,207,142,.15)', border: 'rgba(62,207,142,.5)',  text: '#3ecf8e' }
     };
     const rc   = ratingColors[planRating] || ratingColors['Fair'];
     const icon = planRating === 'Poor' ? '⚠ ' : planRating === 'Fair' ? '◑ ' : planRating === 'Good' ? '✓ ' : '✦ ';
 
-    box.style.background   = rc.bg;
-    box.style.borderColor  = rc.border;
-    box.querySelector('.ai-text').innerHTML = `<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:${rc.bg};border:1px solid ${rc.border};color:${rc.text};margin-bottom:8px;">${icon}${planRating}</span><br/>${coachText}`;
+    box.style.background  = rc.bg;
+    box.style.borderColor = rc.border;
+    box.querySelector('.ai-text').innerHTML =
+      `<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:${rc.bg};border:1px solid ${rc.border};color:${rc.text};margin-bottom:8px;">${icon}${planRating}</span><br/>${coachText}`;
 
-    // Unlock next section if Good or Excellent — and flag submission
+    // Unlock next section on Good or Excellent
     const passingRatings = ['Good', 'Excellent'];
     if (passingRatings.includes(planRating)) {
       const unlockOrder = { situation: 'background', background: 'assessment', assessment: 'recommendation' };
@@ -2229,9 +2253,7 @@ async function fetchIdkCoaching(fieldId) {
       if (fieldId === 'assessment') {
         document.getElementById('submit-row').style.display = 'flex';
       }
-      // Generate section summary
       generateSectionSummary(fieldId);
-      // Mark this section as flagged for dashboard
       if (!window.flaggedSections) window.flaggedSections = [];
       if (!window.flaggedSections.includes(fieldId)) window.flaggedSections.push(fieldId);
     }
@@ -2426,45 +2448,33 @@ async function generateCoachingDebrief(name, line, sit, bg, assess, rec, key) {
   if (!key) return 'Coaching debrief unavailable — no API key configured.';
   const model = getCfg().geminiModel;
 
-  // Include section ratings from the scoring system
-  const ratings = ['situation','background','assessment','recommendation'].map(id => {
-    const { rating } = scoreSection(id, getBulletText(id));
-    return id.charAt(0).toUpperCase() + id.slice(1) + ': ' + rating;
-  }).join(', ');
-
-  // Include any flagged sections
   const flagged = (window.flaggedSections && window.flaggedSections.length)
-    ? 'Sections where supervisor hit a knowledge limit and needed an investigation plan: ' + window.flaggedSections.join(', ')
-    : 'No sections flagged as knowledge limits.';
+    ? 'Sections where supervisor hit a knowledge limit and used an investigation plan: ' + window.flaggedSections.join(', ')
+    : '';
 
-  const prompt = [
-    'You are an operations manager reviewing a ' + currentReportType + ' SBAR report submitted by one of your supervisors.',
-    '',
-    'Supervisor: ' + name + ' | Line: ' + line,
-    '',
-    'SECTION RATINGS (scored by the system):',
-    ratings,
-    '',
-    flagged,
-    '',
-    'WHAT THEY SUBMITTED:',
-    'Situation: ' + sit,
-    'Background: ' + bg,
-    'Assessment: ' + assess,
-    'Recommendation: ' + rec,
-    '',
-    'Write a personal coaching debrief addressed directly to ' + name + '.',
-    'Structure it as:',
-    '1. WHAT YOU DID WELL (2-3 specific things they did well — reference their actual content)',
-    '2. AREAS TO STRENGTHEN (2-3 specific gaps or patterns to work on — be honest but constructive)',
-    '3. FOCUS FOR NEXT MONTH (1-2 concrete things to prioritize improving)',
-    '',
-    'Tone: Direct, honest, supportive — like a good manager giving real feedback.',
-    'Do NOT be vague or generic. Reference what they actually wrote.',
-    'Do NOT repeat the full content back to them.',
-    'If they flagged knowledge gaps, acknowledge that it is okay but push them to close those gaps.',
-    'Keep it under 250 words.'
-  ].join('\n');
+  const prompt =
+`You are an experienced operations director giving a post-submission coaching debrief to a supervisor named ${name} on ${line}.
+
+${flagged ? flagged + '\n\n' : ''}SITUATION: ${sit}
+
+BACKGROUND: ${bg}
+
+ASSESSMENT: ${assess}
+
+RECOMMENDATION: ${rec}
+
+Write exactly 3 sections:
+
+SECTION 1 — WHAT YOU GOT RIGHT
+Name the specific strengths. Reference their actual content — the line, the issue, the root cause they identified, the actions they committed to with deadlines. Sound like a manager confirming they understood the situation correctly. Be specific, not generic.
+
+SECTION 2 — WHAT TO SHARPEN
+Identify 1-2 honest gaps. Be direct. Focus only on what is within their control — do NOT ask why things outside their control happened (people leaving, equipment aging, customer changes). Instead, push on whether their response to those realities is specific and strong enough. Is there an owner? A deadline? A measurable outcome?
+
+SECTION 3 — YOUR TALKING POINTS
+Write 4 bullet points they can say verbatim to their manager, a plant director, or anyone who asks. Each bullet is one confident sentence. Together the 4 bullets must cover: (1) what the issue is and the impact, (2) what caused it, (3) what actions are underway and who owns them, (4) when they will have results. This is their communication card — professional, clear, and action-focused.
+
+Tone: Direct, respectful, practical. No fluff. No generic praise. Speak to them as a developing professional.`;
 
   try {
     const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
@@ -2488,7 +2498,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v2.2';
+  badge.textContent = version || 'v2.4';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
@@ -2597,35 +2607,6 @@ async function submitForm() {
   document.getElementById('summaryCard').scrollIntoView({ behavior: 'smooth' });
 }
 
-async function generateSummary(name, line, sit, bg, assess, rec, key) {
-  if (!key) return 'AI summary unavailable — no Gemini API key configured.';
-  const prompt = `You are reviewing a monthly SBAR operations report from a supervisor named ${name} (${line}).
-
-SITUATION: ${sit}
-BACKGROUND: ${bg}
-ASSESSMENT: ${assess}
-RECOMMENDATION: ${rec}
-
-Write a concise post-submit summary for the supervisor (2-3 paragraphs) that:
-1. Acknowledges the key issue they identified
-2. Highlights any gaps in their thinking or analysis they should still consider
-3. Lists 2-3 "things to keep thinking about" going into next month
-
-Be direct, supportive, and practical. Speak to the supervisor directly.`;
-
-  try {
-    const model = getCfg().geminiModel;
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    const d = await r.json();
-    return d.candidates?.[0]?.content?.parts?.[0]?.text || 'Summary unavailable.';
-  } catch(e) {
-    return 'AI summary could not be generated at this time.';
-  }
-}
 
 function clearForm() {
   ['supName','supLine'].forEach(id => document.getElementById(id).value = '');
