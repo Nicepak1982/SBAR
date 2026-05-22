@@ -275,6 +275,125 @@
 
   /* ── PROGRESS BAR ── */
   .progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 28px; overflow: hidden; }
+
+  /* ── FORM + CHECKLIST LAYOUT ── */
+  .form-checklist-layout {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 24px;
+    align-items: start;
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+  .form-main-col { min-width: 0; }
+  .checklist-col {
+    position: sticky;
+    top: 72px;
+  }
+  /* override page padding since layout handles it */
+  #page-form.active { padding: 40px 0 0; max-width: none; }
+
+  /* ── CHECKLIST PANEL ── */
+  .checklist-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    font-size: 13px;
+  }
+  .checklist-panel-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .checklist-section { margin-bottom: 18px; }
+  .checklist-section:last-child { margin-bottom: 0; }
+  .checklist-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .checklist-section-label .cl-badge {
+    width: 20px; height: 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 4px 0;
+    line-height: 1.4;
+    color: var(--muted);
+    transition: color .25s;
+  }
+  .checklist-item.met { color: var(--text); }
+  .cl-icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    margin-top: 1px;
+    transition: all .25s;
+    background: transparent;
+  }
+  .checklist-item.met .cl-icon {
+    background: var(--success);
+    border-color: var(--success);
+    color: #0d2918;
+  }
+  .checklist-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 12px 0;
+  }
+  .checklist-score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .checklist-score-pill {
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+
+  @media (max-width: 860px) {
+    .form-checklist-layout {
+      grid-template-columns: 1fr;
+      padding: 0 16px 80px;
+    }
+    .checklist-col {
+      position: static;
+      order: -1;
+    }
+    #page-form.active { padding: 24px 0 0; }
+  }
   .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width .4s ease; }
 
   /* ── REPORT TYPE SELECTOR ── */
@@ -553,14 +672,17 @@ document.addEventListener('DOMContentLoaded', function() {
      PAGE: FORM
 ════════════════════════════════════════════════════ -->
 <div id="page-form" class="page active">
-  <form autocomplete="off" onsubmit="return false;" style="display:contents;">
-  <div style="margin-bottom:32px;">
-    <h1>Monthly SBAR</h1>
+  <!-- Page header outside the grid -->
+  <div style="max-width:1160px; margin:0 auto; padding:0 24px; margin-bottom:24px;">
+    <h1 id="form-page-title">Monthly SBAR</h1>
     <p class="subtitle">Take your time. Think through each section carefully — the AI will coach you along the way.</p>
+    <div class="progress-bar" style="margin-top:20px;margin-bottom:0;"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
   </div>
 
-  <!-- Progress -->
-  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="form-checklist-layout">
+  <!-- LEFT: main form column -->
+  <div class="form-main-col">
+  <form autocomplete="off" onsubmit="return false;" style="display:contents;">
 
   <!-- Who are you -->
   <div class="card">
@@ -907,8 +1029,69 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <!-- Submit -->
   </form>
+  </div><!-- end form-main-col -->
+
+  <!-- RIGHT: checklist panel -->
+  <div class="checklist-col">
+    <div class="checklist-panel" id="checklist-panel">
+      <div class="checklist-panel-title">✦ Section Checklist</div>
+
+      <!-- SITUATION -->
+      <div class="checklist-section" id="cl-section-situation">
+        <div class="checklist-section-label"><span class="cl-badge">S</span> Situation</div>
+        <div class="checklist-item" id="cl-situation-0"><span class="cl-icon"></span><span>Line or area named</span></div>
+        <div class="checklist-item" id="cl-situation-1"><span class="cl-icon"></span><span>Current OEE / performance % stated</span></div>
+        <div class="checklist-item" id="cl-situation-2"><span class="cl-icon"></span><span>Target % given</span></div>
+        <div class="checklist-item" id="cl-situation-3"><span class="cl-icon"></span><span>Timeframe established</span></div>
+        <div class="checklist-item" id="cl-situation-4"><span class="cl-icon"></span><span>Loss type identified</span></div>
+        <div class="checklist-item" id="cl-situation-5"><span class="cl-icon"></span><span>Business impact quantified</span></div>
+        <div class="checklist-score-row"><span>Score</span><span class="checklist-score-pill" id="cl-score-situation" style="background:var(--surface2);color:var(--muted);">—</span></div>
+      </div>
+
+      <div class="checklist-divider"></div>
+
+      <!-- BACKGROUND -->
+      <div class="checklist-section" id="cl-section-background">
+        <div class="checklist-section-label"><span class="cl-badge">B</span> Background</div>
+        <div class="checklist-item" id="cl-background-0"><span class="cl-icon"></span><span>Historical baseline given</span></div>
+        <div class="checklist-item" id="cl-background-1"><span class="cl-icon"></span><span>When the issue started</span></div>
+        <div class="checklist-item" id="cl-background-2"><span class="cl-icon"></span><span>What changed (or confirmed nothing changed)</span></div>
+        <div class="checklist-item" id="cl-background-3"><span class="cl-icon"></span><span>Consequence / impact stated</span></div>
+        <div class="checklist-item" id="cl-background-4"><span class="cl-icon"></span><span>Something investigated or ruled out</span></div>
+        <div class="checklist-score-row"><span>Score</span><span class="checklist-score-pill" id="cl-score-background" style="background:var(--surface2);color:var(--muted);">—</span></div>
+      </div>
+
+      <div class="checklist-divider"></div>
+
+      <!-- ASSESSMENT -->
+      <div class="checklist-section" id="cl-section-assessment">
+        <div class="checklist-section-label"><span class="cl-badge">A</span> Assessment</div>
+        <div class="checklist-item" id="cl-assessment-0"><span class="cl-icon"></span><span>Root cause hypothesis stated</span></div>
+        <div class="checklist-item" id="cl-assessment-1"><span class="cl-icon"></span><span>Supporting evidence provided</span></div>
+        <div class="checklist-item" id="cl-assessment-2"><span class="cl-icon"></span><span>Other causes considered / ruled out</span></div>
+        <div class="checklist-item" id="cl-assessment-3"><span class="cl-icon"></span><span>Contributing factors named</span></div>
+        <div class="checklist-item" id="cl-assessment-4"><span class="cl-icon"></span><span>Knowledge gaps acknowledged</span></div>
+        <div class="checklist-score-row"><span>Score</span><span class="checklist-score-pill" id="cl-score-assessment" style="background:var(--surface2);color:var(--muted);">—</span></div>
+      </div>
+
+      <div class="checklist-divider"></div>
+
+      <!-- RECOMMENDATION -->
+      <div class="checklist-section" id="cl-section-recommendation">
+        <div class="checklist-section-label"><span class="cl-badge">R</span> Recommendation</div>
+        <div class="checklist-item" id="cl-recommendation-0"><span class="cl-icon"></span><span>Multiple actions listed</span></div>
+        <div class="checklist-item" id="cl-recommendation-1"><span class="cl-icon"></span><span>Owner assigned to action</span></div>
+        <div class="checklist-item" id="cl-recommendation-2"><span class="cl-icon"></span><span>Deadline specified</span></div>
+        <div class="checklist-item" id="cl-recommendation-3"><span class="cl-icon"></span><span>Addresses the root cause</span></div>
+        <div class="checklist-item" id="cl-recommendation-4"><span class="cl-icon"></span><span>Follow-up / verification planned</span></div>
+        <div class="checklist-score-row"><span>Score</span><span class="checklist-score-pill" id="cl-score-recommendation" style="background:var(--surface2);color:var(--muted);">—</span></div>
+      </div>
+    </div>
+  </div><!-- end checklist-col -->
+  </div><!-- end form-checklist-layout -->
 
   <!-- Full SBAR Summary Preview -->
+  <div style="max-width:1160px; margin:0 auto; padding:0 24px;">
   <div id="full-summary-preview" style="display:none; background:linear-gradient(135deg,rgba(79,142,247,.06),rgba(124,92,191,.06)); border:1px solid rgba(79,142,247,.25); border-radius:12px; padding:28px; margin-bottom:20px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
       <h2 style="font-size:22px; color:var(--accent);">✦ Full SBAR Summary</h2>
@@ -937,6 +1120,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <button class="btn btn-secondary" onclick="startNewForm()">Submit Another</button>
     </div>
   </div>
+  </div><!-- end centered wrapper -->
   </div><!-- end setup-content -->
 </div>
 
@@ -1113,7 +1297,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v1.4";
+const APP_VERSION = "v1.0";
 
 function getCfg() {
   return {
@@ -1298,6 +1482,7 @@ function addBullet(fieldId) {
   renderBullets(fieldId);
   syncHidden(fieldId);
   onFieldInput(fieldId);
+  updateChecklist(fieldId);
   input.focus();
 }
 
@@ -1306,6 +1491,7 @@ function removeBullet(fieldId, index) {
   renderBullets(fieldId);
   syncHidden(fieldId);
   onFieldInput(fieldId);
+  updateChecklist(fieldId);
 }
 
 function renderBullets(fieldId) {
@@ -1355,6 +1541,7 @@ function saveEditBullet(fieldId, index) {
   renderBullets(fieldId);
   syncHidden(fieldId);
   onFieldInput(fieldId);
+  updateChecklist(fieldId);
 }
 
 function syncHidden(fieldId) {
@@ -1643,6 +1830,87 @@ function scoreSection(fieldId, value) {
 }
 
 // ══════════════════════════════════════════
+//  CHECKLIST PANEL — real-time update
+// ══════════════════════════════════════════
+const checklistLabels = {
+  situation:      ['Line or area named','Current OEE / performance % stated','Target % given','Timeframe established','Loss type identified','Business impact quantified'],
+  background:     ['Historical baseline given','When the issue started','What changed (or confirmed nothing changed)','Consequence / impact stated','Something investigated or ruled out'],
+  assessment:     ['Root cause hypothesis stated','Supporting evidence provided','Other causes considered / ruled out','Contributing factors named','Knowledge gaps acknowledged'],
+  recommendation: ['Multiple actions listed','Owner assigned to action','Deadline specified','Addresses the root cause','Follow-up / verification planned']
+};
+
+const ratingPillStyle = {
+  Poor:      'background:rgba(247,95,95,.15);color:#f75f5f;',
+  Fair:      'background:rgba(247,168,79,.15);color:#f7a84f;',
+  Good:      'background:rgba(79,142,247,.15);color:#4f8ef7;',
+  Great:     'background:rgba(79,142,247,.15);color:#4f8ef7;',
+  Excellent: 'background:rgba(62,207,142,.15);color:#3ecf8e;'
+};
+
+function updateChecklist(fieldId) {
+  const value = getBulletText(fieldId);
+  if (!value || value.trim().length < 5) return;
+
+  const v = value.toLowerCase();
+  const has = (...terms) => terms.some(t => v.includes(t.toLowerCase()));
+  const hasN = p => p.test(value);
+
+  // Mirror the scoreSection checks exactly — one boolean per checklist item
+  const itemChecks = {
+    situation: [
+      has('rx500','rx 500','line 1','line 2','line 3','line 4','line 5','line a','line b','line c') || (has('line') && hasN(/line\s*\d/i)) || has('packaging line','assembly line','press line','extruder'),
+      hasN(/\d+\s*%\s*(oee|efficiency)|(oee|efficiency)\s*(of\s*)?\d+\s*%/i),
+      hasN(/target\s*(is|of|at|was)?\s*\d+\s*%|\d+\s*%\s*(target|goal)/i),
+      hasN(/\d+\s*(day|week|month|quarter|year)s?/i) || has('since january','since february','since march','since april','since may','since june','since july','since august','since september','since october','since november','since december'),
+      has('availability','web walk','film walk','broken hand','downtime') || (has('performance') && has('oee')),
+      hasN(/\$[\d,]+|\d+\s*(unit|piece|part)s?\s*(per|a|\/)\s*(day|shift|week)|\d+\s*(lost|missing|short)/)
+    ],
+    background: [
+      hasN(/\d+\s*%\s*(oee|efficiency|target|historically|normally|typically|baseline)/i) || has('historically ran','normally runs','typically runs','used to run','prior to this','baseline of','has been running'),
+      has('since january','since february','since march','since april','since may','since june','started in','began in','started when','began when') || hasN(/\d+\s*(weeks?|months?)\s*ago/i),
+      has('supplier change','new supplier','new operator','new material','new equipment','new process','material change','operator change','equipment change','process change','changeover','no changes','nothing changed','unchanged','no change'),
+      has('overtime','lost units','lost output','$','per day','per week','customer','shipment','behind schedule','capacity'),
+      has('tried','ruled out','investigated','checked','confirmed','verified','tested','pm is current','maintenance is current','no change to','unchanged')
+    ],
+    assessment: [
+      (has('believe','think','hypothesis','suspect','may be','might be','likely','probably','appears to') && has('cause','because','due to','driven by','contributing','result of','related to','failing','issue','problem')) || has('root cause is','caused by','driven by','due to','resulting in','leads to'),
+      has('data shows','data indicate','we observed','we noticed','we measured','we recorded','we tracked','evidence','operators reported','logs show','numbers show') || has('now they are','used to take','has changed','went from','taking longer','running at','dropped to','increased to'),
+      has('ruled out','also considered','another possibility','alternative','however','although','not the cause','eliminated','no other','other causes','may also','could also','but that'),
+      has('contributing','also contributing','secondary','combination','additionally','also playing','compounded','as well','another factor','may also be','could also be'),
+      has('unknown','unclear','do not have','no data','not collected','not yet confirmed','still investigating','not yet identified','causes are unknown','not known','is unknown','need to investigate','investigation needed')
+    ],
+    recommendation: [
+      hasN(/1\)|2\)|step 1|step 2|\(1\)|\(2\)/i) || (v.split(/i will|we will|plan to|going to/).length - 1 >= 2),
+      has('i will','assigned to','owner:','responsible:','team lead','supervisor','manager will','engineer will','john','kyle','me') && !has('i will monitor','i will watch','i will keep'),
+      hasN(/by\s+(monday|tuesday|wednesday|thursday|friday|january|february|march|april|may|june|july|august|september|october|november|december|\d+\/\d+)/i) || hasN(/by\s+(end of|close of)\s+(this|next)?\s*(week|month|day)/i) || hasN(/within\s+\d+\s*(day|week|business day)s?/i) || has('today','tomorrow','end of day','end of shift','this week','next week'),
+      has('root cause','supplier','material','operator training','standard work','process change','equipment','maintenance','rca','investigation','belt','vendor','procedure'),
+      has('follow up','follow-up','verify','confirm results','check back','review results','report back','measure impact','track progress','validate','update','provide an update','response')
+    ]
+  };
+
+  const items = itemChecks[fieldId] || [];
+  items.forEach((met, i) => {
+    const el = document.getElementById('cl-' + fieldId + '-' + i);
+    if (!el) return;
+    if (met) {
+      el.classList.add('met');
+      el.querySelector('.cl-icon').textContent = '✓';
+    } else {
+      el.classList.remove('met');
+      el.querySelector('.cl-icon').textContent = '';
+    }
+  });
+
+  // Update score pill
+  const { rating } = scoreSection(fieldId, value);
+  const pill = document.getElementById('cl-score-' + fieldId);
+  if (pill && rating) {
+    pill.textContent = rating;
+    pill.style.cssText = ratingPillStyle[rating] || ratingPillStyle['Fair'];
+  }
+}
+
+// ══════════════════════════════════════════
 //  IDK / INVESTIGATION PLAN
 // ══════════════════════════════════════════
 const idkBulletData     = { situation: [], background: [], assessment: [] };
@@ -1700,6 +1968,20 @@ async function validateIdkIntent(fieldId) {
   const limitKeywords = ['unknown','unclear','cannot identify','could not identify','no changes','nothing changed','no data','have not been able','unable to determine','not been identified','no root cause','investigation needed','cannot confirm','not confirmed','still investigating','no pattern','no difference','rules out','ruled out','exhausted','no further'];
   const hasLimitLanguage = limitKeywords.some(k => value.includes(k));
 
+  // FIX 2: Detect out-of-scope / escalation language before calling AI
+  const escalateKeywords = ["not my department","not my area","not my responsibility","outside my scope","outside of my scope","don't have access","do not have access","need to escalate","not sure who","don't know who","above my level","above my pay grade","need to ask","not my call","someone else","need to find out who"];
+  const hasEscalateLanguage = escalateKeywords.some(k => value.includes(k));
+  if (hasEscalateLanguage) {
+    checkbox.checked = true;
+    coachBox.classList.add('visible');
+    coachBox.style.display   = '';
+    coachBox.style.background  = 'rgba(79,142,247,.08)';
+    coachBox.style.borderColor = 'rgba(79,142,247,.3)';
+    coachBox.querySelector('.ai-text').innerHTML = '<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.4);color:#4f8ef7;margin-bottom:8px;">↑ Escalation Needed</span><br/>That is a valid boundary to recognize. In your investigation plan below, identify who <em>does</em> own this and when you will hand it off or get an answer from them.';
+    setTimeout(() => openIdkPlan(fieldId), 1400);
+    return;
+  }
+
   if (tooEmpty) {
     checkbox.checked = false;
     coachBox.classList.add('visible');
@@ -1739,14 +2021,16 @@ async function validateIdkIntent(fieldId) {
   const fullPrompt = 'A supervisor is filling out the "' + sectionLabels[fieldId] + '" section of a ' + currentReportType + ' SBAR report and checked "I have exhausted what I know."' +
     '\n\n' + (idkPriorContext ? 'Prior sections:\n' + idkPriorContext + '\n\n' : '') +
     'Current section content:\n' + getBulletText(fieldId) +
-    '\n\nYour job: Make ONE of three determinations:' +
-    '\n1. PUSHBACK — They have NOT exhausted what they know. They have obvious gaps. Tell them specifically what to add.' +
+    '\n\nYour job: Make ONE of four determinations:' +
+    '\n1. PUSHBACK — They have NOT exhausted what they know. They have obvious gaps a supervisor at their level should be able to answer. Tell them specifically what to add.' +
     '\n2. GENUINE — They truly do not know something and need an investigation plan. They have acknowledged specific unknowns or gaps.' +
     '\n3. REDIRECT — They actually know enough to move forward. They have explained the situation/constraint clearly and do NOT need investigation — they need to move to ' + nextName + ' instead.' +
+    '\n4. ESCALATE — They have indicated this is outside their scope, not their department, or owned by someone else. This is a valid boundary.' +
     '\n\nRespond with ONLY one of these (no extra text):' +
     '\nPUSHBACK: [one specific sentence naming what is still missing]' +
     '\nGENUINE: [one sentence confirming they can proceed to their investigation plan]' +
-    '\nREDIRECT: [one sentence telling them they have documented this section well and should move to ' + nextName + ' — be specific about what they captured well]';
+    '\nREDIRECT: [one sentence telling them they have documented this section well and should move to ' + nextName + ' — be specific about what they captured well]' +
+    '\nESCALATE: [one sentence affirming this is outside their scope and telling them their investigation plan should name who owns it and by when they will get an answer]';
 
   try {
     const cfg2 = getCfg();
@@ -1772,6 +2056,13 @@ async function validateIdkIntent(fieldId) {
       coachBox.style.background  = 'rgba(79,142,247,.08)';
       coachBox.style.borderColor = 'rgba(79,142,247,.3)';
       coachBox.querySelector('.ai-text').innerHTML = '<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.4);color:#4f8ef7;margin-bottom:8px;">✓ You Have Enough</span><br/>' + msg;
+
+    } else if (raw.startsWith('ESCALATE')) {
+      const msg = raw.replace(/^ESCALATE:\s*/i, '');
+      coachBox.style.background  = 'rgba(79,142,247,.08)';
+      coachBox.style.borderColor = 'rgba(79,142,247,.3)';
+      coachBox.querySelector('.ai-text').innerHTML = '<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.4);color:#4f8ef7;margin-bottom:8px;">↑ Escalation Needed</span><br/>' + msg;
+      setTimeout(() => openIdkPlan(fieldId), 1400);
 
     } else {
       checkbox.checked = false;
@@ -1834,7 +2125,12 @@ async function fetchIdkCoaching(fieldId) {
   const bullets  = idkBulletData[fieldId];
   if (!bullets.length) return;
 
-  const value    = bullets.map(b => '• ' + b).join('\n');
+  // FIX 1: Filter out meta-comment bullets before scoring
+  const metaPatterns = [/^this (has|was|is) already (been )?stated/i, /^(see above|already mentioned|same as above|covered above|noted above)/i, /^n\/a/i];
+  const actionBullets = bullets.filter(b => !metaPatterns.some(p => p.test(b.trim())));
+  const scoringBullets = actionBullets.length ? actionBullets : bullets; // fall back to all if everything filtered
+  const value    = scoringBullets.map(b => '• ' + b).join('\n');
+  const fullValue = bullets.map(b => '• ' + b).join('\n'); // send full text to AI so it has context
   const box      = document.getElementById('idk-coach-' + fieldId);
   box.classList.add('visible');
   box.querySelector('.ai-text').innerHTML = '<span class="ai-thinking">Evaluating your investigation plan...</span>';
@@ -1845,19 +2141,21 @@ async function fetchIdkCoaching(fieldId) {
   const hasN = p => p.test(value);
 
   const planChecks = [
-    // 1. At least one concrete action (including holding a meeting counts)
-    hasN(/1\)|2\)|step 1|step 2/i) || (v.split(/i will|we will|plan to|going to|will hold|will schedule|will meet/).length - 1 >= 1),
-    // 2. Owner identified (I will = valid owner)
-    has('i will','we will','assigned to','owner:','responsible:','team lead','supervisor','manager will','engineer will'),
-    // 3. Deadline or specific time stated
-    hasN(/by\s+(monday|tuesday|wednesday|thursday|friday|january|february|march|april|may|june|july|august|september|october|november|december|\d+\/\d+)/i) ||
-      hasN(/by\s+(end of|close of)\s+(this|next)?\s*(week|month|day)/i) ||
-      hasN(/within\s+\d+\s*(day|week|business day)s?/i) ||
-      has('thursday','friday','monday','tuesday','wednesday','this week','next week','tomorrow','today','9am','10am','11am','noon'),
-    // 4. Data or investigation activity planned
-    has('data','log','track','measure','investigate','inspect','test','analyze','collect','review','check','meeting','discuss','walk','observe'),
-    // 5. Outcome or follow-up defined
-    has('report','share','follow up','present','update','feedback','findings','decision','determine','identify','resolve','outcome')
+    // 1. At least one concrete action — broad catch including named-person delegation
+    hasN(/1\)|2\)|step 1|step 2/i) ||
+      (v.split(/i will|we will|plan to|going to|will hold|will schedule|will meet|will check|will contact|will review|will investigate|will follow|is contacting|is reviewing|will provide/).length - 1 >= 1),
+    // 2. Owner identified — "I will", named person + "will/is", or explicit owner tag
+    has('i will','we will','assigned to','owner:','responsible:') ||
+      hasN(/(john|kyle|sarah|mike|tom|manager|supervisor|engineer|team lead|maintenance|quality)\s+(will|is|has been|to)\b/i),
+    // 3. Deadline — named day, "end of day", "by [date]", or relative time
+    hasN(/by\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december|\d+\/\d+)/i) ||
+      hasN(/by\s+(end of|close of)\s*(this|next|the)?\s*(week|month|day|shift)/i) ||
+      hasN(/within\s+\d+\s*(day|hour|week|business day)s?/i) ||
+      has('end of day','end of shift','this week','next week','tomorrow','today','by friday','by monday','by wednesday','by thursday','by tuesday'),
+    // 4. Investigation or data activity — including "contacting", "checking", "reviewing"
+    has('data','log','track','measure','investigate','inspect','test','analyze','collect','review','check','meeting','discuss','walk','observe','contact','contacting','calling','checking','speaking','asking','pull','gather'),
+    // 5. Expected output or follow-up
+    has('report','share','follow up','present','update','feedback','findings','decision','determine','identify','resolve','outcome','response','provide','response by','report back','let me know','advise')
   ];
   const planCount   = planChecks.filter(Boolean).length;
   const planMissing = 5 - planCount;
@@ -1868,17 +2166,17 @@ async function fetchIdkCoaching(fieldId) {
   else                        planRating = 'Excellent';
 
   const toneMap = {
-    Poor:      'Acknowledge what they have specifically — if they mention a meeting, push on what the meeting will PRODUCE. Ask: what data will be reviewed, who needs to attend, and what decision needs to come out of it. Never say "vague" — instead ask the specific next question their response raises.',
-    Fair:      'Acknowledge what is good. Name the specific gap — missing owner, missing deadline, or missing outcome — and ask one direct question about their actual content to fill it.',
+    Poor:      'Acknowledge what they have specifically — if they mention a meeting or person, push on what it will PRODUCE. Ask: what data will be reviewed, and what decision comes out of it. Never say "vague" — ask the specific follow-up question instead.',
+    Fair:      'Acknowledge what is good. Name the one specific gap — missing owner, missing deadline, or missing outcome — and ask one direct question about their actual content to fill it.',
     Good:      'Affirm what makes this a solid plan. Give one specific suggestion tied to what they wrote. Tell them they are ready to proceed.',
     Excellent: 'Affirm this is a strong investigation plan. Tell them they can move forward.'
   };
 
   const prompt = 'A supervisor is providing an investigation plan for the "' + fieldId + '" section of their SBAR report.' +
-    '\n\nTheir plan:\n' + value +
-    '\n\nPlan scored: ' + planRating + ' (' + planCount + '/5 elements). THE RATING IS FINAL.' +
+    '\n\nTheir plan:\n' + fullValue +
+    '\n\nPlan scored: ' + planRating + ' (' + planCount + '/5 elements). THE RATING IS FINAL — do not re-evaluate it.' +
     '\n\nCoaching style: ' + toneMap[planRating] +
-    '\n\nCRITICAL RULES:\n- Always reference what they actually wrote\n- If they mention a meeting, ask what it will produce — what data, who attends, what decision comes out\n- If they mention an action, ask who owns it and by when\n- Never use the word "vague" — ask the specific follow-up question instead\n- Under 60 words. Just the coaching message, no preamble.';
+    '\n\nCRITICAL RULES:\n- Always reference what they actually wrote\n- Ignore any meta-comment bullets like "this has already been stated above" — focus only on the actionable items\n- A named person (e.g. "John is contacting the supplier by end of day") counts as a valid owner + action\n- If they mention an action with a deadline, that is good — affirm it\n- Never use the word "vague" — ask the specific follow-up question instead\n- Under 60 words. Just the coaching message, no preamble.';
 
   try {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${cfg.geminiModel}:generateContent?key=${cfg.geminiKey}`, {
@@ -2453,6 +2751,14 @@ function clearForm() {
     document.getElementById('bullet-input-' + id).value = '';
     hideCoach(id);
     document.getElementById('card-' + id).style.display = 'none';
+    // Reset checklist
+    const pill = document.getElementById('cl-score-' + id);
+    if (pill) { pill.textContent = '—'; pill.style.cssText = 'background:var(--surface2);color:var(--muted);'; }
+    const labels = checklistLabels[id] || [];
+    labels.forEach((_, i) => {
+      const el = document.getElementById('cl-' + id + '-' + i);
+      if (el) { el.classList.remove('met'); el.querySelector('.cl-icon').textContent = ''; }
+    });
   });
   document.getElementById('submit-row').style.display = 'none';
   document.getElementById('summaryCard').classList.remove('visible');
