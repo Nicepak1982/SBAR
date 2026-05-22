@@ -564,7 +564,46 @@
     font-style: normal;
   }
 
-  /* ── BULLET BUILDER ── */
+  /* ── SECTION TEACHING BOX ── */
+  .section-teaching-box {
+    background: rgba(79,142,247,.05);
+    border: 1px solid rgba(79,142,247,.18);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.65;
+  }
+  .section-teaching-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .section-teaching-box p {
+    color: #b0b8d0;
+    margin-bottom: 10px;
+  }
+  .section-teaching-box p strong { color: var(--text); }
+  .section-teaching-box p em { color: var(--warn); font-style: normal; font-weight: 600; }
+  .section-teaching-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid rgba(79,142,247,.15);
+    padding-top: 10px;
+    margin-top: 4px;
+  }
+  .section-teaching-checklist span {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 1px 0;
+  }
+  .section-teaching-checklist span::first-letter { color: var(--accent); }
   .bullet-builder {
     background: var(--surface2);
     border: 1px solid var(--border);
@@ -659,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.4</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.5</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -740,6 +779,17 @@ document.addEventListener('DOMContentLoaded', function() {
         <p class="subtitle">What is actually happening right now? Be specific.</p>
       </div>
     </div>
+    <div class="section-teaching-box">
+      <div class="section-teaching-title">🎯 What you're trying to accomplish</div>
+      <p>Paint a clear, factual picture of the problem so anyone reading this — your manager, a plant director, someone who just walked in — immediately understands what is wrong, where, and how serious it is. No background, no causes yet. Just: <strong>what is the current state, and why does it matter?</strong></p>
+      <div class="section-teaching-checklist">
+        <span>✦ Name the specific line or area</span>
+        <span>✦ State the current performance with a number</span>
+        <span>✦ State the target or expected level</span>
+        <span>✦ State how long this has been happening</span>
+        <span>✦ Quantify the business impact ($, units, shifts)</span>
+      </div>
+    </div>
     <div class="field">
       <label>Describe the situation — add one point at a time</label>
       <div class="bullet-builder" id="bullets-situation"></div>
@@ -803,6 +853,17 @@ document.addEventListener('DOMContentLoaded', function() {
         <p class="subtitle">Why does this matter? What context does your manager need?</p>
       </div>
     </div>
+    <div class="section-teaching-box">
+      <div class="section-teaching-title">🎯 What you're trying to accomplish</div>
+      <p>Give your manager the context they need to understand <strong>why this is significant and when it started</strong>. What was normal before? What changed? What happens if this stays unresolved? This section answers: <em>"How did we get here?"</em></p>
+      <div class="section-teaching-checklist">
+        <span>✦ What was the normal performance before this started?</span>
+        <span>✦ When exactly did it start — date or event?</span>
+        <span>✦ What changed around that time? (people, materials, process, equipment)</span>
+        <span>✦ What is the consequence if this stays unresolved?</span>
+        <span>✦ What have you already checked or ruled out?</span>
+      </div>
+    </div>
     <div class="field">
       <label>Provide the background / context — add one point at a time</label>
       <div class="bullet-builder" id="bullets-background"></div>
@@ -864,6 +925,17 @@ document.addEventListener('DOMContentLoaded', function() {
       <div>
         <h2>Assessment</h2>
         <p class="subtitle">What do YOU think is causing this? Own your analysis.</p>
+      </div>
+    </div>
+    <div class="section-teaching-box">
+      <div class="section-teaching-title">🎯 What you're trying to accomplish</div>
+      <p>This is your analysis — not a description of the problem, but your <strong>best explanation of why it is happening</strong>. Use the tools below to structure your thinking. A strong assessment gives your manager confidence that you understand the root cause, not just the symptoms. Use evidence to back up your hypothesis.</p>
+      <div class="section-teaching-checklist">
+        <span>✦ State your root cause hypothesis clearly — "I believe the cause is..."</span>
+        <span>✦ Back it up — what evidence, data, or observations support this?</span>
+        <span>✦ Consider other causes — what did you rule out, and why?</span>
+        <span>✦ Note any contributing factors</span>
+        <span>✦ Be honest about what you don't know yet</span>
       </div>
     </div>
     <div class="field">
@@ -1003,6 +1075,17 @@ document.addEventListener('DOMContentLoaded', function() {
       <div>
         <h2>Recommendation</h2>
         <p class="subtitle">What is your plan? What are you going to do about it?</p>
+      </div>
+    </div>
+    <div class="section-teaching-box">
+      <div class="section-teaching-title">🎯 What you're trying to accomplish</div>
+      <p>Your recommendation must directly address the root cause you identified in your Assessment. A vague plan is not a plan. Your manager needs to know <strong>exactly what will happen, who owns it, and by when</strong> — and specifically: <em>when will the problem be resolved?</em> That is the question they will always ask.</p>
+      <div class="section-teaching-checklist">
+        <span>✦ Every action needs a named owner (a person or role, not "we")</span>
+        <span>✦ Every action needs a deadline</span>
+        <span>✦ Address the root cause directly — not just the symptom</span>
+        <span>✦ State the specific milestone that confirms the problem is resolved</span>
+        <span>✦ Include a follow-up check — how will you know the fix is working?</span>
       </div>
     </div>
     <div class="field">
@@ -1280,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.4</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.5</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1297,7 +1380,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v2.4";
+const APP_VERSION = "v2.5";
 
 function getCfg() {
   return {
@@ -1429,7 +1512,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v2.4',
+      version:     version || 'v2.5',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -1794,11 +1877,13 @@ CRITICAL MINDSET: Operations is about pulling the levers you have, not lamenting
 - Push for contributing factors they may have missed.
 - If they've done a solid 5-Why, acknowledge it and push them toward what they're going to DO about the root cause — that's what belongs in Recommendation.`,
     recommendation: `Think like an operations manager approving an action plan.
-- Every action needs an owner and a deadline. "We will" is not an owner — a name or role is.
-- Actions should address the actual root cause identified in Assessment, not just the symptom.
-- Push for immediate containment (what happens TODAY) AND the fix (what resolves it for good).
-- If the root cause is a staffing/training gap, push: who specifically is doing the training, what is the schedule, and what is the measurable milestone that confirms the 10 people are competent?
-- Verify the plan closes the loop: how will they know it worked?`
+CRITICAL: Do NOT be fooled by volume. A long list of vague intentions is NOT a plan. Judge quality, not quantity.
+- The single most important question: does this plan state WHEN the root cause will be resolved and HOW they will know it worked? If not, that is the #1 gap.
+- "Call a meeting" is not an action — what decision or output must come from that meeting?
+- "We will" is not an owner — a name or role is.
+- "Develop a training plan" needs: who builds it, what it covers, when it is done, and when the 10 people will be confirmed competent.
+- Push for immediate containment (what happens today/this week) AND the resolution milestone (when is the problem actually solved).
+- If they have policy constraints, that is fine — but their plan must show how they achieve the goal WITHIN those constraints.`
   };
 
   const prompt =
@@ -1820,22 +1905,23 @@ IMPORTANT: Be accurate, not generous. Only mark true if the information is clear
 - Missing a number for OEE or target → those items are false even if performance is implied
 - "impaired ability to run the line" is NOT a quantified business impact — needs a number or specific consequence
 - A hypothesis needs a stated cause, not just a description of the symptom
+- For Recommendation: "develop a plan" or "call a meeting" does NOT count as a deadline or milestone — a specific date and completion outcome is required
 
 ${checklistStr}
 
 STEP 2 — RATING
 Count how many checklist items are true (call this N out of ${labels.length}).
+IMPORTANT: Volume of bullets does NOT affect the rating. 10 vague bullets = Poor. 3 specific bullets = potentially Excellent.
 0-2 true = Poor | 3 true = Fair | 4 true = Good | 5 true = Great | ${labels.length} true = Excellent
 
 STEP 3 — COACHING MESSAGE
-Write a direct, forward-focused coaching message under 70 words:
-- Always reference what they actually wrote — never give generic advice
-- Think like an ops manager: focus on what CAN be done, not what went wrong
-- Poor/Fair: Name the most important gap and ask one sharp forward-focused question
-- Good: Name one improvement still needed, then say "Ready to move to ${nextSection[fieldId] || 'submit'}"
-- Great/Excellent: Affirm what makes it strong. Say "Move on to ${nextSection[fieldId] || 'submit'}"
-- Do NOT ask why something outside their control happened (people leaving, customers changing, equipment aging) — push instead on what they will DO about it
+Write a coaching message that TEACHES, not just flags. Under 80 words.
+Structure it as:
+- First: name the most important gap in plain language and explain WHY it matters (e.g. "Your plan doesn't state when the 10 new hires will be fully trained — that is the question your manager will ask first")
+- Then: tell them specifically what to add or change (e.g. "Add a bullet that states: [name] will confirm all 10 hires are competent by [date], measured by [milestone]")
+- For Good/Great/Excellent: affirm what is strong specifically, give one sharpening suggestion if needed, then say "Ready to move to ${nextSection[fieldId] || 'submit'}"
 - Do NOT say "great start", "good start", or "solid" unless the rating is Great/Excellent
+- Do NOT ask why things outside their control happened — push on what they will DO about it
 - Never repeat the rating word in the message body
 
 RESPOND IN EXACTLY THIS FORMAT — nothing before or after:
@@ -1927,9 +2013,25 @@ COACHING: your message here`;
 }
 
 async function fetchExample(fieldId, label, cfg) {
-  const industries = ['a hospital nurse station','a restaurant kitchen','a retail warehouse','a hotel front desk','a construction site','a call center','a school cafeteria','a delivery logistics hub'];
-  const industry   = industries[Math.floor(Math.random() * industries.length)];
-  const prompt     = 'Write a realistic example of a well-written "' + label + '" section of an SBAR report from ' + industry + '. Use 2-4 bullet points starting with bullet character, specific with real numbers. Do NOT mention manufacturing or OEE. No intro text, just the bullets.';
+  // Build context from what the supervisor has already written
+  const theirContent = getBulletText(fieldId);
+  const situationContext = getBulletText('situation');
+
+  // Extract their industry/topic context from what they wrote so the example feels familiar
+  const contextHint = situationContext || theirContent;
+
+  const prompt =
+`A supervisor is filling out the "${label}" section of an operations SBAR report.
+
+Here is what they have written so far in their report:
+${contextHint}
+
+Write a SHORT example of what a strong, well-written "${label}" section looks like — but for a SIMILAR type of problem in a similar operations environment. Do NOT copy their content. Do NOT solve their specific problem. Show them what "good" looks like structurally — with real numbers, named owners, and specific deadlines where relevant.
+
+Use 3-4 bullet points. Be specific and concrete. No intro text, no labels, just the bullets starting with •
+
+The example should feel relevant to their situation — same type of environment, similar type of issue — so they can see clearly what they should aim for.`;
+
   try {
     const res  = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
       method:  'POST',
@@ -1939,10 +2041,12 @@ async function fetchExample(fieldId, label, cfg) {
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     if (text) {
+      const exBox = document.getElementById('example-box-' + fieldId);
+      const exLabel = exBox ? exBox.querySelector('.ex-label') : null;
+      if (exLabel) exLabel.textContent = 'Example — similar situation, showing what strong looks like';
       document.getElementById('example-text-' + fieldId).innerHTML = text.replace(/\n/g, '<br/>');
       const btn = document.getElementById('example-toggle-' + fieldId);
       if (btn) { btn.style.display = 'inline-flex'; btn.textContent = '▸ See an example'; }
-      const exBox = document.getElementById('example-box-' + fieldId);
       if (exBox) exBox.classList.remove('open');
     }
   } catch(e) { /* silent */ }
@@ -2498,7 +2602,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v2.4';
+  badge.textContent = version || 'v2.5';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
