@@ -659,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.0</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.1</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -1280,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.0</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.1</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1297,7 +1297,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v2.0";
+const APP_VERSION = "v2.1";
 
 function getCfg() {
   return {
@@ -1429,7 +1429,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v2.0',
+      version:     version || 'v2.1',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -1757,6 +1757,10 @@ function resetChecklist(fieldId) {
 // ══════════════════════════════════════════
 //  UNIFIED AI COACHING + CHECKLIST ENGINE
 // ══════════════════════════════════════════
+
+// Store checklist results so they persist when sections scroll into view
+const checklistState = {};
+
 async function fetchCoaching(fieldId, value) {
   const cfg = getCfg();
   if (!cfg.geminiKey || !cfg.geminiModel) return;
@@ -1787,23 +1791,27 @@ ${value}
 ${contextNote}
 
 STEP 1 — CHECKLIST
-For each item below, decide if the supervisor's bullets clearly address it.
+For each item below, decide if the supervisor's bullets directly address it.
 Use plain language understanding — not keyword matching.
-A supervisor saying "10 of our 30 operators are new hires brought on 3 months ago" clearly establishes BOTH when something started AND what changed.
-Be reasonable and generous — partial or implied answers count if the meaning is clear.
+IMPORTANT: Be accurate, not generous. Only mark true if the information is clearly present.
+- "10 new hires brought on 3 months ago" → "When the issue started" = true, "What changed" = true
+- Missing a number for OEE or target → those items are false even if performance is implied
+- "impaired ability to run the line" is NOT a quantified business impact — needs a number or specific consequence
+- A hypothesis needs a stated cause, not just a description of the symptom
 
 ${checklistStr}
 
 STEP 2 — RATING
 Count how many checklist items are true (call this N out of ${labels.length}).
-0-1 true = Poor | 2 true = Fair | 3 true = Good | 4 true = Great | 5+ true = Excellent
+0-2 true = Poor | 3 true = Fair | 4 true = Good | 5 true = Great | ${labels.length} true = Excellent
 
 STEP 3 — COACHING MESSAGE
-Write a coaching message under 65 words that:
-- References what they actually wrote — never give generic advice
-- Poor/Fair: asks ONE sharp follow-up question about the most important unchecked item
-- Good: one specific improvement suggestion, then say "Ready to move to ${nextSection[fieldId] || 'submit'}"
-- Great/Excellent: affirm what is strong, say "Move on to ${nextSection[fieldId] || 'submit'}"
+Write a direct, specific coaching message under 70 words:
+- Always name what they wrote — never give generic advice
+- Poor/Fair: Be direct. Name the 1-2 most important missing items and ask a sharp question that forces them to go find the specific answer. Push them — if they haven't quantified the impact, ask "What is the actual dollar or unit cost per shift?"
+- Good: Name one specific gap still present, push on it, then say "Ready to move to ${nextSection[fieldId] || 'submit'}"
+- Great/Excellent: Affirm specifically what makes it strong. Say "Move on to ${nextSection[fieldId] || 'submit'}"
+- Do NOT say "great start", "good start", or "solid" unless the rating is Great/Excellent
 - Never repeat the rating word in the message body
 
 RESPOND IN EXACTLY THIS FORMAT — nothing before or after:
@@ -1831,6 +1839,9 @@ COACHING: your message here`;
     const checkedItems = checklistMatch
       ? checklistMatch[1].split(',').map(s => s.trim().toLowerCase() === 'true')
       : labels.map(() => false);
+
+    // Store result so it survives section unlocks and DOM re-renders
+    checklistState[fieldId] = { checkedItems, rating };
 
     // Update checklist panel with AI result
     applyChecklistResult(fieldId, checkedItems, rating);
@@ -1860,6 +1871,11 @@ COACHING: your message here`;
       if (nextId) {
         setTimeout(() => {
           document.getElementById('card-' + nextId).style.display = 'block';
+          // Re-apply any stored checklist state for all visible sections
+          Object.keys(checklistState).forEach(id => {
+            const s = checklistState[id];
+            if (s) applyChecklistResult(id, s.checkedItems, s.rating);
+          });
           const sc = document.getElementById('summary-card-' + fieldId);
           if (sc) sc.scrollIntoView({ behavior:'smooth', block:'start' });
         }, 300);
@@ -2467,7 +2483,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v2.0';
+  badge.textContent = version || 'v2.1';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
@@ -2620,6 +2636,8 @@ function clearForm() {
   document.getElementById('submit-row').style.display = 'none';
   document.getElementById('summaryCard').classList.remove('visible');
   document.getElementById('progressFill').style.width = '0%';
+  // Reset checklist state store
+  Object.keys(checklistState).forEach(k => delete checklistState[k]);
   // Reset summaries and IDK state
   Object.keys(sectionSummaryCache).forEach(k => delete sectionSummaryCache[k]);
   selectReportType('Monthly');
