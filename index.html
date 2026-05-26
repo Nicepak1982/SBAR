@@ -2846,10 +2846,10 @@ function renderSubmissions() {
         <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
           <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:10px;">✦ Export As</div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn btn-secondary fmt-btn" style="font-size:12px; padding:7px 14px;" data-fmt="4blocker" data-idx="${i}">📊 4-Blocker</button>
-            <button class="btn btn-secondary fmt-btn" style="font-size:12px; padding:7px 14px;" data-fmt="bullets"  data-idx="${i}">📋 Bullet Summary</button>
-            <button class="btn btn-secondary fmt-btn" style="font-size:12px; padding:7px 14px;" data-fmt="email"    data-idx="${i}">📧 Email Update</button>
-            <button class="btn btn-secondary fmt-btn" style="font-size:12px; padding:7px 14px;" data-fmt="standup"  data-idx="${i}">📣 Standup Brief</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('4blocker', ${i})">📊 4-Blocker</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('bullets',  ${i})">📋 Bullet Summary</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('email',    ${i})">📧 Email Update</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('standup',  ${i})">📣 Standup Brief</button>
           </div>
         </div>
       </div>
