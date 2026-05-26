@@ -698,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.6</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.7</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -1363,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.6</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.7</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1380,7 +1380,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v2.6";
+const APP_VERSION = "v2.7";
 
 function getCfg() {
   return {
@@ -1512,7 +1512,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v2.6',
+      version:     version || 'v2.7',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -2603,7 +2603,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v2.6';
+  badge.textContent = version || 'v2.7';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
@@ -2871,6 +2871,17 @@ function renderSubmissions() {
           <div class="sbar-item"><h4>Recommendation</h4><p>${s.recommendation || ''}</p></div>
         </div>
         ${s.aiSummary ? `<h4 style="margin-bottom:8px; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--success);">✦ AI Summary</h4><div class="ai-sum-block">${s.aiSummary}</div>` : ''}
+
+        <!-- FORMAT EXPORT BUTTONS -->
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:10px;">✦ Export As</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('4blocker', ${i})">📊 4-Blocker</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('bullets', ${i})">📋 Bullet Summary</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('email', ${i})">📧 Email Update</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('standup', ${i})">📣 Standup Brief</button>
+          </div>
+        </div>
       </div>
     </div>
   `).join('');
@@ -2884,8 +2895,160 @@ function toggleSub(i) {
 }
 
 // ══════════════════════════════════════════
-//  TOAST
+//  FORMAT EXPORT
 // ══════════════════════════════════════════
+const formatConfig = {
+  '4blocker': {
+    title:  '📊 4-Blocker',
+    sub:    'Classic ops format — 4 quadrants',
+    prompt: (s) => `You are formatting an operations SBAR report into a clean 4-Blocker document.
+Supervisor: ${s.supervisorName} | Line: ${s.line} | ${s.month || ''}
+
+SBAR DATA:
+Situation: ${s.situation}
+Background: ${s.background}
+Assessment: ${s.assessment}
+Recommendation: ${s.recommendation}
+
+Write a 4-Blocker with EXACTLY these four sections. Use plain text only — no markdown, no asterisks, no bold. Use ALL CAPS for the section headers. Leave a blank line between sections.
+
+WHAT IS THE ISSUE
+[2-3 sentences: what is happening, where, and the business impact. Specific numbers only.]
+
+ROOT CAUSE
+[2-3 sentences: what is driving the issue and the evidence that confirms it. Be direct.]
+
+ACTIONS UNDERWAY
+[Bullet list using • — each action on its own line with owner and deadline. One action per bullet.]
+
+STATUS & NEXT STEPS
+[Current status in one sentence. Then 2-3 next steps with dates. End with: Next update: [suggest a date].]`
+  },
+  'bullets': {
+    title:  '📋 Bullet Summary',
+    sub:    'Concise bullet points for quick updates',
+    prompt: (s) => `You are formatting an operations SBAR report into a tight bullet point summary.
+Supervisor: ${s.supervisorName} | Line: ${s.line} | ${s.month || ''}
+
+SBAR DATA:
+Situation: ${s.situation}
+Background: ${s.background}
+Assessment: ${s.assessment}
+Recommendation: ${s.recommendation}
+
+Write 5-7 bullet points using • that tell the complete story in order: what the issue is → impact → when it started → root cause → what is being done → expected resolution. Each bullet is one clear sentence. Specific and factual — no filler. Plain text only, no markdown, no bold.`
+  },
+  'email': {
+    title:  '📧 Email Update',
+    sub:    'Ready-to-send professional email',
+    prompt: (s) => `You are formatting an operations SBAR report into a professional email update.
+Supervisor: ${s.supervisorName} | Line: ${s.line} | ${s.month || ''}
+
+SBAR DATA:
+Situation: ${s.situation}
+Background: ${s.background}
+Assessment: ${s.assessment}
+Recommendation: ${s.recommendation}
+
+Write a professional email. Plain text only — no markdown, no asterisks, no bold formatting.
+
+Format exactly as:
+SUBJECT: [clear subject line]
+
+Hi [Manager / Team],
+
+[Opening sentence: what this email is about]
+
+SITUATION
+[2-3 sentences on what is happening and the impact]
+
+ROOT CAUSE
+[1-2 sentences on what is driving it]
+
+ACTIONS & TIMELINE
+[Bullet list using • — each action with owner and deadline on its own line]
+
+[Closing sentence: when they will next update, and who to contact with questions]
+
+${s.supervisorName}`
+  },
+  'standup': {
+    title:  '📣 Standup Brief',
+    sub:    '30-second verbal update',
+    prompt: (s) => `You are formatting an operations SBAR report into a 30-second standup brief.
+Supervisor: ${s.supervisorName} | Line: ${s.line} | ${s.month || ''}
+
+SBAR DATA:
+Situation: ${s.situation}
+Background: ${s.background}
+Assessment: ${s.assessment}
+Recommendation: ${s.recommendation}
+
+Write 3-4 sentences the supervisor can say out loud in a standup meeting. It should cover: (1) what the issue is and the impact, (2) what is causing it, (3) what is being done and by when. Confident, direct, professional. Plain text only. No headers, no bullets, no markdown. Write it as something a person would actually say out loud — natural but authoritative.`
+  }
+};
+
+let currentFormatText = '';
+
+async function generateFormat(formatKey, subIndex) {
+  const s   = allSubmissions[subIndex];
+  const cfg = getCfg();
+  if (!s) return;
+
+  const fc = formatConfig[formatKey];
+  if (!fc) return;
+
+  // Open modal in loading state
+  document.getElementById('format-modal-title').textContent = fc.title;
+  document.getElementById('format-modal-sub').textContent   = fc.sub;
+  document.getElementById('format-modal-body').textContent  = 'Generating...';
+  document.getElementById('format-modal').style.display     = 'flex';
+  currentFormatText = '';
+
+  try {
+    const res  = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ contents: [{ parts: [{ text: fc.prompt(s) }] }] })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const text = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+    currentFormatText = text;
+    document.getElementById('format-modal-body').textContent = text;
+  } catch(e) {
+    document.getElementById('format-modal-body').textContent = 'Could not generate format: ' + e.message;
+  }
+}
+
+function closeFormatModal() {
+  document.getElementById('format-modal').style.display = 'none';
+  currentFormatText = '';
+}
+
+function copyFormatOutput() {
+  if (!currentFormatText) return;
+  navigator.clipboard.writeText(currentFormatText).then(() => {
+    showToast('✓ Copied to clipboard!', 'success');
+  }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = currentFormatText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✓ Copied!', 'success');
+  });
+}
+
+// Close modal on backdrop click
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('format-modal');
+  if (e.target === modal) closeFormatModal();
+});
+
+
 let toastTimer;
 function showToast(msg, type) {
   const t = document.getElementById('toast');
@@ -2928,5 +3091,24 @@ window.onpageshow = function(e) {
   if (e.persisted) hardResetForm();
 };
 </script>
+<!-- ═══════════════════════════════════════════════════
+     FORMAT EXPORT MODAL
+════════════════════════════════════════════════════ -->
+<div id="format-modal" style="position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:var(--card); border:1px solid var(--border); border-radius:16px; max-width:680px; width:100%; max-height:85vh; display:flex; flex-direction:column; overflow:hidden;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px 16px; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <div>
+        <div id="format-modal-title" style="font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; color:var(--text);">Format</div>
+        <div id="format-modal-sub" style="font-size:12px; color:var(--muted); margin-top:2px;"></div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button id="format-copy-btn" class="btn btn-secondary" style="font-size:12px; padding:7px 16px;" onclick="copyFormatOutput()">⎘ Copy</button>
+        <button class="btn btn-secondary" style="font-size:12px; padding:7px 12px;" onclick="closeFormatModal()">✕</button>
+      </div>
+    </div>
+    <div id="format-modal-body" style="padding:24px; overflow-y:auto; flex:1; font-size:14px; line-height:1.7; color:var(--text); white-space:pre-wrap;"></div>
+  </div>
+</div>
+
 </body>
 </html>
