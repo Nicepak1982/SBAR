@@ -698,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.5</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.6</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -1363,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.5</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.6</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1380,7 +1380,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v2.5";
+const APP_VERSION = "v2.6";
 
 function getCfg() {
   return {
@@ -1512,7 +1512,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v2.5',
+      version:     version || 'v2.6',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -1869,13 +1869,14 @@ async function fetchCoaching(fieldId, value) {
   const sectionCoachingTone = {
     situation: 'Push for specifics: exact line, exact metric, exact timeframe, exact business impact. No numbers = not specific enough.',
     background: 'Push for context: what was normal before, when it changed, what specifically changed, and what the consequence is if it stays unresolved.',
-    assessment: `Think like a seasoned operations manager reviewing this analysis.
+    assessment: `Think like a seasoned operations manager reviewing a root cause analysis.
+WHAT BELONGS HERE: Evidence, hypothesis, what was ruled out, and what is confirmed. NOT the action plan — that goes in Recommendation.
 CRITICAL MINDSET: Operations is about pulling the levers you have, not lamenting the ones you don't.
-- If the root cause is something outside their control (people left, customer changed, machine aged), do NOT ask why it happened — that ship has sailed.
-- Instead push them: given this root cause, what actions are available RIGHT NOW? Who can train the 10 people? Can training be accelerated? Can experienced operators from another line temporarily help? What is the realistic timeline?
-- Push for evidence that supports their hypothesis — what observations, data, or conversations back this up?
-- Push for contributing factors they may have missed.
-- If they've done a solid 5-Why, acknowledge it and push them toward what they're going to DO about the root cause — that's what belongs in Recommendation.`,
+- Push for the hypothesis to be clearly stated: "I believe the cause is X because of Y evidence"
+- Push for the timeline correlation: does the OEE drop timing match the event they identified?
+- Push for ruling out alternatives: what else could it be, and why did they eliminate it?
+- If they have identified a root cause outside their control (people left, supplier changed, equipment aged), do NOT ask why it happened. Confirm they have it right, push for any remaining evidence gaps, then tell them to take it to Recommendation where the action plan belongs.
+- Do NOT ask them to state their plan or timeline for fixing it here — that is Recommendation's job. Close by directing them there.`,
     recommendation: `Think like an operations manager approving an action plan.
 CRITICAL: Do NOT be fooled by volume. A long list of vague intentions is NOT a plan. Judge quality, not quantity.
 - The single most important question: does this plan state WHEN the root cause will be resolved and HOW they will know it worked? If not, that is the #1 gap.
@@ -2602,7 +2603,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v2.5';
+  badge.textContent = version || 'v2.6';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
