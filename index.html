@@ -698,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.9</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.10</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -1363,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.9</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.10</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1380,7 +1380,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v2.9";
+const APP_VERSION = "v2.10";
 
 function getCfg() {
   return {
@@ -1515,7 +1515,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v2.9',
+      version:     version || 'v2.10',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -2606,7 +2606,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v2.9';
+  badge.textContent = version || 'v2.10';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
@@ -3007,7 +3007,7 @@ async function generateFormat(formatKey, subIndex) {
   document.getElementById('format-modal-title').textContent = fc.title;
   document.getElementById('format-modal-sub').textContent   = fc.sub;
   document.getElementById('format-modal-body').textContent  = 'Generating...';
-  document.getElementById('format-modal').style.display     = 'flex';
+  document.getElementById('format-modal').classList.add('fm-open');
   currentFormatText = '';
 
   try {
@@ -3027,7 +3027,7 @@ async function generateFormat(formatKey, subIndex) {
 }
 
 function closeFormatModal() {
-  document.getElementById('format-modal').style.display = 'none';
+  document.getElementById('format-modal').classList.remove('fm-open');
   currentFormatText = '';
 }
 
@@ -3099,8 +3099,8 @@ window.onpageshow = function(e) {
 <!-- ═══════════════════════════════════════════════════
      FORMAT EXPORT MODAL
 ════════════════════════════════════════════════════ -->
-<div id="format-modal" style="position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px;">
-  <div style="background:var(--card); border:1px solid var(--border); border-radius:16px; max-width:680px; width:100%; max-height:85vh; display:flex; flex-direction:column; overflow:hidden;">
+<div id="format-modal" style="position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:9999; align-items:center; justify-content:center; padding:20px; visibility:hidden; opacity:0; transition:opacity .2s;">
+  <div style="background:var(--card); border:1px solid var(--border); border-radius:16px; max-width:680px; width:100%; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,.5);">
     <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px 16px; border-bottom:1px solid var(--border); flex-shrink:0;">
       <div>
         <div id="format-modal-title" style="font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; color:var(--text);">Format</div>
@@ -3114,6 +3114,11 @@ window.onpageshow = function(e) {
     <div id="format-modal-body" style="padding:24px; overflow-y:auto; flex:1; font-size:14px; line-height:1.7; color:var(--text); white-space:pre-wrap;"></div>
   </div>
 </div>
+
+<style>
+  #format-modal          { display:flex; }
+  #format-modal.fm-open  { visibility:visible; opacity:1; }
+</style>
 
 </body>
 </html>
