@@ -698,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.12</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.15</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -811,8 +811,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:12px; padding:10px 14px; background:rgba(247,168,79,.05); border-radius:6px; border-left:3px solid rgba(247,168,79,.4);">You acknowledged a gap in your Situation. A good investigation plan answers: What data will you collect? Who will collect it? By when? What does "finding out" look like specifically?</div>
         <div class="idk-bullet-list" id="idk-bullets-situation"></div>
         <div class="idk-input-row">
-          <input type="text" id="idk-input-situation" placeholder="e.g. I will pull downtime logs by shift for the past 3 months by Friday to quantify each loss type (owner: me)..." placeholder="e.g. I will pull shift-level data by Friday to identify patterns..."
-            onkeydown="if(event.key==='Enter')'{event.preventDefault();addIdkBullet('situation')}" />
+          <input type="text" id="idk-input-situation" placeholder="e.g. I will pull downtime logs by shift for the past 3 months by Friday to quantify each loss type (owner: me)..."
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addIdkBullet('situation')}" />
           <button class="btn btn-secondary" onclick="addIdkBullet('situation')">+ Add</button>
         </div>
         <div class="ai-coaching" id="idk-coach-situation" style="margin-top:12px;">
@@ -885,8 +885,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:12px; padding:10px 14px; background:rgba(247,168,79,.05); border-radius:6px; border-left:3px solid rgba(247,168,79,.4);">You acknowledged gaps in the Background context. A good plan identifies: What happened that you need to confirm? Who has the information? What records or people do you need to consult?</div>
         <div class="idk-bullet-list" id="idk-bullets-background"></div>
         <div class="idk-input-row">
-          <input type="text" id="idk-input-background" placeholder="e.g. I will meet with engineering Thursday to review change logs and confirm if any equipment settings changed in January (owner: me)..." placeholder="e.g. I will pull shift-level data by Friday to identify patterns..."
-            onkeydown="if(event.key==='Enter')'{event.preventDefault();addIdkBullet('background')}" />
+          <input type="text" id="idk-input-background" placeholder="e.g. I will meet with engineering Thursday to review change logs and confirm if any equipment settings changed in January (owner: me)..."
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addIdkBullet('background')}" />
           <button class="btn btn-secondary" onclick="addIdkBullet('background')">+ Add</button>
         </div>
         <div class="ai-coaching" id="idk-coach-background" style="margin-top:12px;">
@@ -1035,8 +1035,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:12px; padding:10px 14px; background:rgba(247,168,79,.05); border-radius:6px; border-left:3px solid rgba(247,168,79,.4);">You acknowledged you do not have the root cause yet. A good RCA plan includes: What hypotheses will you test? What data will confirm or rule them out? Who is involved and by when?</div>
         <div class="idk-bullet-list" id="idk-bullets-assessment"></div>
         <div class="idk-input-row">
-          <input type="text" id="idk-input-assessment" placeholder="e.g. I will conduct a 5 Why with the team by Wednesday using shift-level data to identify the common factor across all three loss types (owner: me)..." placeholder="e.g. I will pull shift-level data by Friday to identify patterns..."
-            onkeydown="if(event.key==='Enter')'{event.preventDefault();addIdkBullet('assessment')}" />
+          <input type="text" id="idk-input-assessment" placeholder="e.g. I will conduct a 5 Why with the team by Wednesday using shift-level data to identify the common factor across all three loss types (owner: me)..."
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addIdkBullet('assessment')}" />
           <button class="btn btn-secondary" onclick="addIdkBullet('assessment')">+ Add</button>
         </div>
         <div class="ai-coaching" id="idk-coach-assessment" style="margin-top:12px;">
@@ -1363,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.12</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.15</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1380,7 +1380,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v2.12";
+const APP_VERSION = "v2.15";
 
 function getCfg() {
   return {
@@ -1515,7 +1515,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v2.12',
+      version:     version || 'v2.15',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -2461,49 +2461,6 @@ async function generateSectionSummary(fieldId) {
   }
 }
 
-async function generateFullSummary(name, line, sit, bg, assess, rec, key) {
-  if (!key) return 'AI summary unavailable.';
-  const sitSum  = sectionSummaryCache['situation']      || sit;
-  const bgSum   = sectionSummaryCache['background']     || bg;
-  const assSum  = sectionSummaryCache['assessment']     || assess;
-  const recSum  = sectionSummaryCache['recommendation'] || rec;
-  const model   = getCfg().geminiModel;
-  const prompt = [
-    'You are writing a formal ' + currentReportType + ' operations report for a senior management audience.',
-    '',
-    'Supervisor: ' + name + ' | Line/Department: ' + line,
-    '',
-    'Source material:',
-    'SITUATION: ' + sitSum,
-    'BACKGROUND: ' + bgSum,
-    'ASSESSMENT: ' + assSum,
-    'RECOMMENDATION: ' + recSum,
-    '',
-    'Write a single cohesive professional narrative (4-5 paragraphs) following these rules:',
-    '1. READ ALL SECTIONS FIRST before writing — identify what information appears across sections and weave it together naturally',
-    '2. NEVER repeat the same fact twice — if OEE is mentioned in Situation, do not restate it in Background',
-    '3. Each paragraph should ADVANCE the story — Situation establishes the problem, Background explains the context, Assessment explains the cause, Recommendation states the path forward',
-    '4. Write as one flowing document — do NOT use section headers like "Situation:" or "Background:" in the output',
-    '5. Fix all spelling and grammar errors from the source material',
-    '6. Do NOT add any new information, assumptions, or analysis beyond what is in the source material',
-    '7. Use formal operations management language appropriate for senior leadership',
-    '8. The opening sentence should clearly state who, what line, and what the core issue is',
-    '9. The closing sentence should state the expected outcome of the recommended actions',
-    '10. If any section noted an investigation is needed, weave that naturally into the narrative as an acknowledged gap with a plan'
-  ].join('\n');
-  try {
-    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    const d = await res.json();
-    return d.candidates?.[0]?.content?.parts?.[0]?.text || 'Summary unavailable.';
-  } catch(e) { return 'Summary could not be generated.'; }
-}
-
-// ══════════════════════════════════════════
-//  FULL SUMMARY PREVIEW
-// ══════════════════════════════════════════
 async function showFullSummaryPreview() {
   const cfg     = getCfg();
   const preview = document.getElementById('full-summary-preview');
@@ -2606,7 +2563,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v2.12';
+  badge.textContent = version || 'v2.15';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
@@ -2898,6 +2855,8 @@ function renderSubmissions() {
       </div>
     </div>
   `).join('');
+
+  attachFmtListener();
 }
 
 function toggleSub(i) {
@@ -3064,16 +3023,25 @@ function copyFormatOutput() {
   });
 }
 
-// Single delegated listener — handles format buttons AND modal backdrop
-document.addEventListener('click', (e) => {
-  // Format export buttons
+// Delegated listener on submissions list — attached after render
+function attachFmtListener() {
+  const list = document.getElementById('submissions-list');
+  if (!list) return;
+  // Remove any prior listener to avoid duplicates
+  list.removeEventListener('click', fmtClickHandler);
+  list.addEventListener('click', fmtClickHandler);
+}
+
+function fmtClickHandler(e) {
   const btn = e.target.closest('.fmt-btn');
   if (btn) {
     e.stopPropagation();
     generateFormat(btn.dataset.fmt, parseInt(btn.dataset.idx, 10));
-    return;
   }
-  // Modal backdrop
+}
+
+// Modal backdrop close
+document.addEventListener('click', (e) => {
   const modal = document.getElementById('format-modal');
   if (e.target === modal) closeFormatModal();
 });
