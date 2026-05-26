@@ -685,6 +685,19 @@
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════════════════
+     SITE LOGIN OVERLAY
+════════════════════════════════════════════════════ -->
+<div id="site-login-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:99999; align-items:center; justify-content:center;">
+  <div style="background:var(--card); border:1px solid var(--border); border-radius:16px; padding:40px 36px; max-width:360px; width:100%; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,.5);">
+    <div style="font-family:'Bebas Neue',sans-serif; font-size:36px; letter-spacing:3px; color:var(--accent); margin-bottom:4px;">SBAR OPS</div>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:28px; letter-spacing:.5px;">Enter your access password to continue</div>
+    <input type="password" id="siteLoginPass" placeholder="Password" style="margin-bottom:12px;" onkeydown="if(event.key==='Enter') checkSiteLogin()" />
+    <button class="btn btn-primary" style="width:100%;" onclick="checkSiteLogin()">Enter</button>
+    <div id="site-login-error" style="margin-top:12px; font-size:13px; color:var(--danger); display:none;">Incorrect password. Please try again.</div>
+  </div>
+</div>
+
 <script>
 // Runs immediately on DOM ready — clears any browser session-restored values
 document.addEventListener('DOMContentLoaded', function() {
@@ -1319,6 +1332,10 @@ document.addEventListener('DOMContentLoaded', function() {
       <label>Dashboard Password</label>
       <input type="password" id="setupPassword" placeholder="Choose a password for the dashboard" />
     </div>
+    <div class="field">
+      <label>Site Access Password <span style="font-size:11px; color:var(--muted); font-weight:400; text-transform:none; letter-spacing:0;">(required to open the app — leave blank to disable)</span></label>
+      <input type="password" id="setupSitePass" placeholder="Leave blank for no site login" />
+    </div>
     <div class="field" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
       <label>Version Number</label>
       <input type="text" id="setupVersion" placeholder="e.g. v1.1" style="max-width:160px;" />
@@ -1388,6 +1405,7 @@ function getCfg() {
     geminiKey:   localStorage.getItem('sbar_gemini_key')   || '',
     geminiModel: localStorage.getItem('sbar_gemini_model') || 'gemini-1.5-flash',
     dashPass:    localStorage.getItem('sbar_dash_pass')    || 'admin',
+    sitePass:    localStorage.getItem('sbar_site_pass')    || '',
     changelog:   localStorage.getItem('sbar_changelog')    || ''
   };
 }
@@ -1401,6 +1419,7 @@ async function loadConfigFromSheet() {
       if (d.config.geminiKey)   localStorage.setItem('sbar_gemini_key',   d.config.geminiKey);
       if (d.config.geminiModel) localStorage.setItem('sbar_gemini_model', d.config.geminiModel);
       if (d.config.dashPass)    localStorage.setItem('sbar_dash_pass',    d.config.dashPass);
+      if (d.config.sitePass)    localStorage.setItem('sbar_site_pass',    d.config.sitePass);
       // Cache changelog info — version badge is hardcoded in HTML
       const version   = d.config.version   || APP_VERSION;
       const changelog = d.config.changelog || '';
@@ -1440,9 +1459,10 @@ function populateSetupFields() {
   const cfg = getCfg();
   const keyEl = document.getElementById('setupGeminiKey');
   if (keyEl) keyEl.value = cfg.geminiKey || '';
-  document.getElementById('setupPassword').value  = cfg.dashPass   || '';
-  document.getElementById('setupVersion').value   = APP_VERSION;
-  document.getElementById('setupChangelog').value = cfg.changelog  || localStorage.getItem('sbar_changelog') || '';
+  document.getElementById('setupPassword').value     = cfg.dashPass   || '';
+  document.getElementById('setupSitePass').value     = cfg.sitePass   || '';
+  document.getElementById('setupVersion').value      = APP_VERSION;
+  document.getElementById('setupChangelog').value    = cfg.changelog  || localStorage.getItem('sbar_changelog') || '';
   if (cfg.geminiKey) fetchGeminiModels(cfg.geminiModel);
 }
 
@@ -1500,9 +1520,10 @@ function setModelStatus(msg, type) {
 }
 
 async function saveSetup() {
-  const key   = document.getElementById('setupGeminiKey') ? document.getElementById('setupGeminiKey').value.trim() : getCfg().geminiKey;
-  const pass  = document.getElementById('setupPassword').value.trim();
-  const model = document.getElementById('setupModel').value.trim();
+  const key      = document.getElementById('setupGeminiKey') ? document.getElementById('setupGeminiKey').value.trim() : getCfg().geminiKey;
+  const pass     = document.getElementById('setupPassword').value.trim();
+  const sitePass = document.getElementById('setupSitePass').value.trim();
+  const model    = document.getElementById('setupModel').value.trim();
   if (!pass) {
     setSetupStatus('Please set a dashboard password.', 'error'); return;
   }
@@ -1515,6 +1536,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
+      sitePass:    sitePass,
       version:     version || APP_VERSION,
       changelog:   changelog
     });
@@ -1528,6 +1550,7 @@ async function saveSetup() {
     if (key)   localStorage.setItem('sbar_gemini_key',   key);
     if (model) localStorage.setItem('sbar_gemini_model', model);
     localStorage.setItem('sbar_dash_pass', pass);
+    localStorage.setItem('sbar_site_pass', sitePass);
     setSetupStatus('✓ Configuration saved to Google Sheets. All users will receive this config on next load.', 'success');
   } catch(e) {
     setSetupStatus('Save failed: ' + e.message, 'error');
@@ -3097,6 +3120,13 @@ window.onload = async () => {
   hardResetForm();
   // Load config from Google Sheet — works for everyone automatically
   await loadConfigFromSheet();
+  // Show site login if a sitePass is configured
+  const cfg = getCfg();
+  if (cfg.sitePass) {
+    const overlay = document.getElementById('site-login-overlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => document.getElementById('siteLoginPass').focus(), 100);
+  }
   // Check changelog after config is loaded — shows on main screen
   if (window._pendingChangelog) {
     setTimeout(() => {
@@ -3104,6 +3134,19 @@ window.onload = async () => {
     }, 800);
   }
 };
+
+function checkSiteLogin() {
+  const entered = document.getElementById('siteLoginPass').value;
+  const cfg = getCfg();
+  if (entered === cfg.sitePass) {
+    document.getElementById('site-login-overlay').style.display = 'none';
+    document.getElementById('site-login-error').style.display = 'none';
+  } else {
+    document.getElementById('site-login-error').style.display = 'block';
+    document.getElementById('siteLoginPass').value = '';
+    document.getElementById('siteLoginPass').focus();
+  }
+}
 
 // Also fires on back/forward cache restore (bfcache)
 window.onpageshow = function(e) {
