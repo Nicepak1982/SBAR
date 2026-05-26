@@ -698,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.7</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.8</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -1241,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Filters -->
     <div class="filter-bar">
-      <input type="text" id="filterSearch" placeholder="Search by name, line, or keyword..." oninput="renderSubmissions()" />
+      <input type="text" id="filterSearch" placeholder="Search by name, line, or keyword..." oninput="renderSubmissions()" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')" />
       <select id="filterName" onchange="renderSubmissions()"><option value="">All Supervisors</option></select>
       <select id="filterLine" onchange="renderSubmissions()"><option value="">All Lines</option></select>
       <select id="filterMonth" onchange="renderSubmissions()"><option value="">All Months</option></select>
@@ -1363,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.7</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.8</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1380,7 +1380,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v2.7";
+const APP_VERSION = "v2.8";
 
 function getCfg() {
   return {
@@ -1421,7 +1421,10 @@ function showPage(name) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   event.currentTarget.classList.add('active');
-  if (name === 'dashboard') loadDashboard();
+  if (name === 'dashboard') {
+    document.getElementById('filterSearch').value = '';
+    loadDashboard();
+  }
   if (name === 'setup') {
     // Reset setup lock each time tab is opened
     document.getElementById('setup-lock').style.display = 'block';
@@ -1512,7 +1515,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v2.7',
+      version:     version || 'v2.8',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -2603,7 +2606,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v2.7';
+  badge.textContent = version || 'v2.8';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
