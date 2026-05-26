@@ -1380,7 +1380,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v3.2";
+const APP_VERSION = "v3.3";
 
 function getCfg() {
   return {
@@ -2999,9 +2999,11 @@ async function generateFormat(formatKey, subIndex) {
     showToast('🔴 STOPPED: format-modal element not found in DOM', 'error');
     return;
   }
+  fModal.style.display = 'flex';
   fModal.style.visibility = 'visible';
   fModal.style.opacity = '1';
   currentFormatText = '';
+  showToast('🟢 Step 3: Modal display=' + fModal.style.display + ' visibility=' + fModal.style.visibility, 'success');
   showToast('🟢 Step 4: Modal opened — calling Gemini (model=' + cfg.geminiModel + ', key=' + (cfg.geminiKey ? 'SET (' + cfg.geminiKey.substring(0,6) + '...)' : 'MISSING') + ')', 'success');
 
   try {
@@ -3025,6 +3027,7 @@ async function generateFormat(formatKey, subIndex) {
 
 function closeFormatModal() {
   const fModal = document.getElementById('format-modal');
+  fModal.style.display = 'none';
   fModal.style.visibility = 'hidden';
   fModal.style.opacity = '0';
   currentFormatText = '';
