@@ -698,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- NAV -->
 <nav>
   <div class="nav-brand">SBAR OPS</div>
-  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.10</div>
+  <div id="nav-version" style="margin-left:auto; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; padding:0 8px;">v2.12</div>
   <div class="nav-tab active" onclick="showPage('form')">Monthly Report</div>
   <div class="nav-tab" onclick="showPage('dashboard')">Dashboard</div>
   <div class="nav-tab locked" onclick="showPage('setup')">Setup</div>
@@ -1363,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div style="font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px; color:var(--accent);">What's New</div>
         <div id="changelog-version-label" style="font-size:12px; color:var(--muted); margin-top:2px; letter-spacing:1px;"></div>
       </div>
-      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.10</span>
+      <span style="background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:1px;" id="changelog-version-badge">v2.12</span>
     </div>
     <div id="changelog-body" style="margin-bottom:24px; font-size:14px; line-height:1.9; color:var(--text);"></div>
     <button class="btn btn-primary" style="width:100%;" onclick="closeChangelog()">Got it — let me get started</button>
@@ -1380,7 +1380,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v2.10";
+const APP_VERSION = "v2.12";
 
 function getCfg() {
   return {
@@ -1515,7 +1515,7 @@ async function saveSetup() {
       geminiKey:   key || getCfg().geminiKey,
       geminiModel: model || getCfg().geminiModel,
       dashPass:    pass,
-      version:     version || 'v2.10',
+      version:     version || 'v2.12',
       changelog:   changelog
     });
     await fetch(SCRIPT_URL, {
@@ -2606,7 +2606,7 @@ function showChangelog(version, notes) {
   const label = document.getElementById('changelog-version-label');
   const body  = document.getElementById('changelog-body');
 
-  badge.textContent = version || 'v2.10';
+  badge.textContent = version || 'v2.12';
   label.textContent = 'Released ' + new Date().toLocaleDateString('en-US', { month:'long', year:'numeric' });
 
   // Render bullet points
@@ -2875,16 +2875,24 @@ function renderSubmissions() {
           <div class="sbar-item"><h4>Assessment</h4><p>${s.assessment || ''}</p></div>
           <div class="sbar-item"><h4>Recommendation</h4><p>${s.recommendation || ''}</p></div>
         </div>
-        ${s.aiSummary ? `<h4 style="margin-bottom:8px; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--success);">✦ AI Summary</h4><div class="ai-sum-block">${s.aiSummary}</div>` : ''}
+        ${s.aiSummary ? `
+        <div style="margin-top:16px;">
+          <div onclick="toggleAiSummary(${i})" style="cursor:pointer; display:flex; align-items:center; gap:8px; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--success); font-weight:700; user-select:none;">
+            <span id="ai-sum-chevron-${i}">▸</span> AI Coaching Debrief
+          </div>
+          <div id="ai-sum-body-${i}" style="display:none; margin-top:10px;">
+            <div class="ai-sum-block">${s.aiSummary}</div>
+          </div>
+        </div>` : ''}
 
         <!-- FORMAT EXPORT BUTTONS -->
         <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
           <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:10px;">✦ Export As</div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('4blocker', ${i})">📊 4-Blocker</button>
-            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('bullets', ${i})">📋 Bullet Summary</button>
-            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('email', ${i})">📧 Email Update</button>
-            <button class="btn btn-secondary" style="font-size:12px; padding:7px 14px;" onclick="event.stopPropagation(); generateFormat('standup', ${i})">📣 Standup Brief</button>
+            <button class="btn btn-secondary fmt-btn" style="font-size:12px; padding:7px 14px;" data-fmt="4blocker" data-idx="${i}">📊 4-Blocker</button>
+            <button class="btn btn-secondary fmt-btn" style="font-size:12px; padding:7px 14px;" data-fmt="bullets"  data-idx="${i}">📋 Bullet Summary</button>
+            <button class="btn btn-secondary fmt-btn" style="font-size:12px; padding:7px 14px;" data-fmt="email"    data-idx="${i}">📧 Email Update</button>
+            <button class="btn btn-secondary fmt-btn" style="font-size:12px; padding:7px 14px;" data-fmt="standup"  data-idx="${i}">📣 Standup Brief</button>
           </div>
         </div>
       </div>
@@ -2897,6 +2905,15 @@ function toggleSub(i) {
   const chevron = document.getElementById('chevron-' + i);
   const open    = body.classList.toggle('open');
   chevron.textContent = open ? '▾' : '▸';
+}
+
+function toggleAiSummary(i) {
+  const body    = document.getElementById('ai-sum-body-' + i);
+  const chevron = document.getElementById('ai-sum-chevron-' + i);
+  if (!body) return;
+  const open = body.style.display === 'none';
+  body.style.display    = open ? 'block' : 'none';
+  chevron.textContent   = open ? '▾' : '▸';
 }
 
 // ══════════════════════════════════════════
@@ -3047,8 +3064,16 @@ function copyFormatOutput() {
   });
 }
 
-// Close modal on backdrop click
+// Single delegated listener — handles format buttons AND modal backdrop
 document.addEventListener('click', (e) => {
+  // Format export buttons
+  const btn = e.target.closest('.fmt-btn');
+  if (btn) {
+    e.stopPropagation();
+    generateFormat(btn.dataset.fmt, parseInt(btn.dataset.idx, 10));
+    return;
+  }
+  // Modal backdrop
   const modal = document.getElementById('format-modal');
   if (e.target === modal) closeFormatModal();
 });
