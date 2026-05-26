@@ -1380,7 +1380,7 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqSIljFozdt_wSLBH3L
 
 // ── VERSION — UPDATE THIS WHEN YOU RELEASE A NEW VERSION ─────────────────
 // Also update the changelog in Setup tab before pushing to GitHub
-const APP_VERSION = "v3.3";
+const APP_VERSION = "v3.4";
 
 function getCfg() {
   return {
@@ -2972,39 +2972,42 @@ Write 3-4 sentences the supervisor can say out loud in a standup meeting. It sho
 let currentFormatText = '';
 
 async function generateFormat(formatKey, subIndex) {
-  showToast('🔵 Step 1: Button clicked — fmt=' + formatKey + ' idx=' + subIndex, 'success');
-
-  const s   = filteredSubmissions[subIndex];
-  const cfg = getCfg();
-
-  if (!s) {
-    showToast('🔴 STOPPED: No submission found at index ' + subIndex + ' (filteredSubmissions.length=' + filteredSubmissions.length + ')', 'error');
-    return;
-  }
-  showToast('🟢 Step 2: Submission found — ' + (s.supervisorName || 'unnamed'), 'success');
-
+  const s  = filteredSubmissions[subIndex];
   const fc = formatConfig[formatKey];
-  if (!fc) {
-    showToast('🔴 STOPPED: No formatConfig entry for key "' + formatKey + '"', 'error');
-    return;
-  }
-  showToast('🟢 Step 3: Format config found — opening modal', 'success');
+  const cfg = getCfg();
+  if (!s || !fc) return;
 
-  // Open modal in loading state
-  document.getElementById('format-modal-title').textContent = fc.title;
-  document.getElementById('format-modal-sub').textContent   = fc.sub;
-  document.getElementById('format-modal-body').textContent  = 'Generating...';
-  const fModal = document.getElementById('format-modal');
-  if (!fModal) {
-    showToast('🔴 STOPPED: format-modal element not found in DOM', 'error');
-    return;
-  }
-  fModal.style.display = 'flex';
-  fModal.style.visibility = 'visible';
-  fModal.style.opacity = '1';
-  currentFormatText = '';
-  showToast('🟢 Step 3: Modal display=' + fModal.style.display + ' visibility=' + fModal.style.visibility, 'success');
-  showToast('🟢 Step 4: Modal opened — calling Gemini (model=' + cfg.geminiModel + ', key=' + (cfg.geminiKey ? 'SET (' + cfg.geminiKey.substring(0,6) + '...)' : 'MISSING') + ')', 'success');
+  // Remove any existing overlay
+  const old = document.getElementById('fmt-overlay');
+  if (old) old.remove();
+
+  // Build overlay fresh and inject directly into body
+  const overlay = document.createElement('div');
+  overlay.id = 'fmt-overlay';
+  overlay.style.cssText = [
+    'position:fixed', 'top:0', 'left:0', 'width:100%', 'height:100%',
+    'background:rgba(0,0,0,0.82)', 'z-index:99999',
+    'display:flex', 'align-items:center', 'justify-content:center',
+    'padding:20px', 'box-sizing:border-box'
+  ].join(';');
+
+  overlay.innerHTML = `
+    <div style="background:#1a1a28;border:1px solid #2a2a3d;border-radius:16px;max-width:680px;width:100%;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 16px;border-bottom:1px solid #2a2a3d;flex-shrink:0;">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#e8e8f0;">${fc.title}</div>
+          <div style="font-size:12px;color:#7878a0;margin-top:2px;">${fc.sub}</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button onclick="copyFmtOverlay()" style="padding:7px 16px;background:#1e1e2d;border:1px solid #2a2a3d;border-radius:8px;color:#e8e8f0;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;">⎘ Copy</button>
+          <button onclick="document.getElementById('fmt-overlay').remove()" style="padding:7px 12px;background:#1e1e2d;border:1px solid #2a2a3d;border-radius:8px;color:#e8e8f0;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;">✕</button>
+        </div>
+      </div>
+      <div id="fmt-overlay-body" style="padding:24px;overflow-y:auto;flex:1;font-size:14px;line-height:1.7;color:#7878a0;white-space:pre-wrap;font-style:italic;">Generating...</div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
 
   try {
     const res  = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + cfg.geminiModel + ':generateContent?key=' + cfg.geminiKey, {
@@ -3012,33 +3015,23 @@ async function generateFormat(formatKey, subIndex) {
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ contents: [{ parts: [{ text: fc.prompt(s) }] }] })
     });
-    showToast('🟢 Step 5: API responded — HTTP ' + res.status, res.ok ? 'success' : 'error');
     const data = await res.json();
     if (data.error) throw new Error(data.error.message);
     const text = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
     currentFormatText = text;
-    document.getElementById('format-modal-body').textContent = text;
-    showToast('✅ Done — response received', 'success');
+    const body = document.getElementById('fmt-overlay-body');
+    if (body) { body.style.color = '#e8e8f0'; body.style.fontStyle = 'normal'; body.textContent = text; }
   } catch(e) {
-    showToast('🔴 API ERROR: ' + e.message, 'error');
-    document.getElementById('format-modal-body').textContent = 'Could not generate format: ' + e.message;
+    const body = document.getElementById('fmt-overlay-body');
+    if (body) { body.style.color = '#f75f5f'; body.textContent = 'Error: ' + e.message; }
   }
 }
 
-function closeFormatModal() {
-  const fModal = document.getElementById('format-modal');
-  fModal.style.display = 'none';
-  fModal.style.visibility = 'hidden';
-  fModal.style.opacity = '0';
-  currentFormatText = '';
-}
-
-function copyFormatOutput() {
+function copyFmtOverlay() {
   if (!currentFormatText) return;
   navigator.clipboard.writeText(currentFormatText).then(() => {
     showToast('✓ Copied to clipboard!', 'success');
   }).catch(() => {
-    // Fallback for older browsers
     const ta = document.createElement('textarea');
     ta.value = currentFormatText;
     document.body.appendChild(ta);
@@ -3120,7 +3113,7 @@ window.onpageshow = function(e) {
 <!-- ═══════════════════════════════════════════════════
      FORMAT EXPORT MODAL
 ════════════════════════════════════════════════════ -->
-<div id="format-modal" style="position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:9999; align-items:center; justify-content:center; padding:20px; visibility:hidden; opacity:0; transition:opacity .2s;">
+<div id="format-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.75); z-index:9999; align-items:center; justify-content:center; padding:20px;">
   <div style="background:var(--card); border:1px solid var(--border); border-radius:16px; max-width:680px; width:100%; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,.5);">
     <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 24px 16px; border-bottom:1px solid var(--border); flex-shrink:0;">
       <div>
@@ -3137,8 +3130,7 @@ window.onpageshow = function(e) {
 </div>
 
 <style>
-  #format-modal          { display:flex; }
-  #format-modal.fm-open  { visibility:visible; opacity:1; }
+  #format-modal.fm-open { display:flex; }
 </style>
 
 </body>
